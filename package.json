@@ -1,0 +1,32 @@
+{
+  "name": "web3d",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --progress --mode=production",
+    "watch": "webpack --progress --mode=production --watch"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.4.0",
+    "@babel/preset-env": "^7.4.2",
+    "ar.js": "^1.7.1",
+    "autodll-webpack-plugin": "^0.4.2",
+    "babel-loader": "^8.0.5",
+    "express": "^4.16.4",
+    "jquery": "^3.3.1",
+    "node-ar.js": "0.0.5",
+    "npm": "^6.9.0",
+    "shelljs": "^0.8.3",
+    "socket.io": "^2.2.0",
+    "socket.io-client": "^2.2.0",
+    "stats-js": "^1.0.0",
+    "three": "^0.102.1",
+    "three-orbitcontrols": "^2.102.1",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0"
+  }
+}
