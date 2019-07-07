@@ -2,11 +2,15 @@ import * as THREE from 'three'
 import OrbitControls from 'three-orbitcontrols'
 import {scene, initScene} from './initScene.js'
 import {Maze} from './Maze.js'
+import KeyboardState from './keyboard.js'
+import Car from './Car.js'
 
 var camera, renderer, stats, clock, controls, maze;
-var i, raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(),pickables = [];
-window.addEventListener('resize', onWindowResize, false);
+var raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(),pickables = [];
+var car;
+var keyboard = new KeyboardState();
 
+window.addEventListener('resize', onWindowResize, false);
 document.addEventListener('mousedown',onMouseDown,false);
 
 init();
@@ -17,9 +21,7 @@ function init() {
 	
     clock = new THREE.Clock();
 
-    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
-    camera.position.set(250,750,250);
-    camera.lookAt(new THREE.Vector3(250,0,250));
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 10, 10000);
     scene.add(camera);
 
     var gridXZ = new THREE.GridHelper(500, 10, 'red', 'white');
@@ -34,6 +36,7 @@ function init() {
     renderer.setClearColor(0x888888);
 
     //controls = new OrbitControls(camera, renderer.domElement);
+    //controls.enableKeys = false;
 
     document.body.appendChild(renderer.domElement);
 	
@@ -42,6 +45,13 @@ function init() {
     maze.wall.forEach(function(e){
         pickables.push(e);
     });
+
+    car = new Car(maze,camera);
+
+    let t = new THREE.Mesh(new THREE.CylinderGeometry(15,15,100,64), new THREE.MeshBasicMaterial({color: 0x0000ff}));
+    t.position.set(475,50,475);
+
+    scene.add(t);
 }
 
 function onWindowResize() {
@@ -54,6 +64,7 @@ function onWindowResize() {
 
 function animate() {
     var dt = clock.getDelta();
+    car.update(dt,keyboard);
 
     requestAnimationFrame(animate);
     render();

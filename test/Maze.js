@@ -294,7 +294,11 @@ class Maze{
         }
     }
 
-
+    check(a,b){
+        if(this.graph[a].indexOf(b) < 0)
+            return false;
+        return true;
+    }
 }
 
 export {Maze}
