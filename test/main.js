@@ -4,10 +4,12 @@ import {scene, initScene} from './initScene.js'
 import {Maze} from './Maze.js'
 import KeyboardState from './keyboard.js'
 import Car from './Car.js'
+import HUD from './HUD.js'
+import NPC from './NPC.js'
 
-var camera, renderer, stats, clock, controls, maze;
+var camera, renderer, stats, clock, controls, maze, hud;
 var raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(),pickables = [];
-var car;
+var car, npc;
 var keyboard = new KeyboardState();
 
 window.addEventListener('resize', onWindowResize, false);
@@ -34,24 +36,34 @@ function init() {
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x888888);
+    renderer.autoClear = false;
 
     //controls = new OrbitControls(camera, renderer.domElement);
     //controls.enableKeys = false;
 
     document.body.appendChild(renderer.domElement);
 	
-    maze = new Maze(10,10,50,5,50);
+    maze = new Maze(5,5,50,5,50);
     
     maze.wall.forEach(function(e){
         pickables.push(e);
     });
 
     car = new Car(maze,camera);
-
+    hud = new HUD(car.body);
+    ////
     let t = new THREE.Mesh(new THREE.CylinderGeometry(15,15,100,64), new THREE.MeshBasicMaterial({color: 0x0000ff}));
     t.position.set(475,50,475);
 
     scene.add(t);
+
+    let plane = new THREE.Mesh(new THREE.PlaneGeometry(500,500), new THREE.MeshBasicMaterial({color: 0xc6793c}))
+    plane.rotation.x = -Math.PI / 2;
+    plane.position.set(250,0,250);
+    scene.add(plane);
+    ////
+
+    npc = new NPC(maze);
 }
 
 function onWindowResize() {
@@ -65,13 +77,27 @@ function onWindowResize() {
 function animate() {
     var dt = clock.getDelta();
     car.update(dt,keyboard);
+    npc.update(dt);
 
     requestAnimationFrame(animate);
     render();
 }
 
 function render() {
-    renderer.render(scene, camera);
+    var WW = window.innerWidth;
+    var HH = window.innerHeight;
+
+    renderer.setScissorTest(true);
+    renderer.setViewport(0,0,WW,HH);
+    renderer.setScissor(0,0,WW,HH);
+    renderer.clear();
+    renderer.render(scene,camera);
+
+    renderer.setViewport(WW * 0.7, 0, WW * 0.3, HH * 0.3);
+    renderer.setScissor(WW * 0.7, 0, WW * 0.3, HH * 0.3);
+    renderer.clear();
+    renderer.render(scene,hud.cameraHUD2);
+    renderer.render(hud.sceneHUD,hud.cameraHUD1);
 }
 
 function onMouseDown(e){

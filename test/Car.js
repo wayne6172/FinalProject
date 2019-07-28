@@ -2,7 +2,7 @@ import {scene} from './initScene.js'
 import * as THREE from 'three'
 
 class Car{
-    constructor(maze,camera,startCell = 0){
+    constructor(maze,camera = null,startCell = 0){
         this.nowCell = startCell;
         this.width = 10;
         this.body = this.buildBody();
@@ -10,13 +10,13 @@ class Car{
         this.rot = 0;
         this.speed = 0;
 
-        camera.position.set(-40,60,0);
-        camera.lookAt(this.body.position.clone().add(new THREE.Vector3(-5,100,0)).sub(camera.position));
-        this.body.add(camera);
-
-        this.body.position.z = (Math.floor(startCell / this.maze.n) * this.maze.width) + this.maze.width / 2;
-        this.body.position.x = (startCell % this.maze.n * this.maze.width) + this.maze.width / 2;
+        if(camera){
+            camera.position.set(-40,60,0);
+            camera.lookAt(this.body.position.clone().add(new THREE.Vector3(-5,100,0)).sub(camera.position));
+            this.body.add(camera);
+        }
         
+        this.body.position.copy(this.maze.getNodeToPos(startCell));
 
         scene.add(this.body);
     }

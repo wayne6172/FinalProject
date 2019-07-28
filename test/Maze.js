@@ -25,8 +25,6 @@ class Maze{
 
         //var totalinWall = new THREE.Object3D();
         //var mat = new THREE.MeshNormalMaterial();
-        var insideWall = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), new THREE.MeshNormalMaterial());
-        
         var topWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),new THREE.MeshNormalMaterial());
         var bottomWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),new THREE.MeshNormalMaterial());
         var leftWall = new THREE.Mesh(new THREE.BoxGeometry(thickness,wallHeight,m * width),new THREE.MeshNormalMaterial());
@@ -298,6 +296,13 @@ class Maze{
         if(this.graph[a].indexOf(b) < 0)
             return false;
         return true;
+    }
+
+    getNodeToPos(n){
+        let x = (n % this.n * this.width) + this.width / 2;
+        let z = (Math.floor(n / this.n) * this.width) + this.width / 2;
+        
+        return new THREE.Vector3(x,0,z);
     }
 }
 
