@@ -9,7 +9,7 @@ import NPC from './NPC.js'
 
 var camera, renderer, stats, clock, controls, maze, hud;
 var raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(),pickables = [];
-var car, npc;
+var car, npc, npc2;
 var keyboard = new KeyboardState();
 
 window.addEventListener('resize', onWindowResize, false);
@@ -49,7 +49,7 @@ function init() {
         pickables.push(e);
     });
 
-    car = new Car(maze,camera);
+    car = new Car(maze,'green',0,camera);
     hud = new HUD(car.body);
     ////
     let t = new THREE.Mesh(new THREE.CylinderGeometry(15,15,100,64), new THREE.MeshBasicMaterial({color: 0x0000ff}));
@@ -63,7 +63,8 @@ function init() {
     scene.add(plane);
     ////
 
-    npc = new NPC(maze);
+    npc = new NPC(maze,'red',5,0);
+    npc2 = new NPC(maze,'blue',13,1);
 }
 
 function onWindowResize() {
@@ -77,6 +78,7 @@ function onWindowResize() {
 function animate() {
     var dt = clock.getDelta();
     car.update(dt,keyboard);
+    npc2.update(dt);
     npc.update(dt);
 
     requestAnimationFrame(animate);

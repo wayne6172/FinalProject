@@ -2,10 +2,10 @@ import {scene} from './initScene.js'
 import * as THREE from 'three'
 
 class Car{
-    constructor(maze,camera = null,startCell = 0){
+    constructor(maze,bodycolor,startCell = 0,camera = null){
         this.nowCell = startCell;
         this.width = 10;
-        this.body = this.buildBody();
+        this.body = this.buildBody(bodycolor);
         this.maze = maze;
         this.rot = 0;
         this.speed = 0;
@@ -21,10 +21,10 @@ class Car{
         scene.add(this.body);
     }
 
-    buildBody(){
+    buildBody(bodycolor){
         let body = new THREE.Object3D();
-        let a = new THREE.Mesh(new THREE.CylinderGeometry(this.width,this.width,10,64),new THREE.MeshNormalMaterial());
-        let b = new THREE.Mesh(new THREE.BoxGeometry(this.width * 2,10,6),new THREE.MeshNormalMaterial());
+        let a = new THREE.Mesh(new THREE.CylinderGeometry(this.width,this.width,10,64),new THREE.MeshBasicMaterial({color: new THREE.Color(bodycolor)}));
+        let b = new THREE.Mesh(new THREE.BoxGeometry(this.width * 2,10,6),new THREE.MeshBasicMaterial({color: new THREE.Color(bodycolor)}));
         b.position.set(this.width,0,0);
         a.add(b);
         a.position.y = 5;

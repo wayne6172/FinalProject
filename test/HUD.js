@@ -10,7 +10,7 @@ class HUD{
     initHUD(){
         this.sceneHUD = new THREE.Scene();
         this.cameraHUD1 = new THREE.OrthographicCamera(-10.1,10.1,10.1,-10.1,1,50);
-        this.cameraHUD2 = new THREE.OrthographicCamera(-175, 175, 175, -175, -350, 350);
+        this.cameraHUD2 = new THREE.OrthographicCamera(-250, 250, 250, -250, -350, 350);
         this.cameraHUD2.position.set(0,15,0);
         this.cameraHUD2.up.set(1,0,0);
         this.cameraHUD2.lookAt(new THREE.Vector3());

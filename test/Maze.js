@@ -42,16 +42,17 @@ class Maze{
         /*init Graph use adjency list*/
         
         for(i = 0; i < m * n; i++){
-            var temp = [];
+            var temp = new Array(4);
+            temp.fill(null);
 
             if(i - n >= 0) // top
-                temp.push(i - n);
+                temp[0] = i - n;
             if(i % n !== 0) // left
-                temp.push(i - 1);
-            if((i + 1) % n !== 0) // right
-                temp.push(i + 1);
+                temp[1] = i - 1;
             if(i + n < m * n) // bottom
-               temp.push(i + n); 
+                temp[2] = i + n; 
+            if((i + 1) % n !== 0) // right
+                temp[3] = i + 1;
             
             this.graph.push(temp);
         }
@@ -77,8 +78,8 @@ class Maze{
             this.wall.push(wallclone);
             scene.add(wallclone);
 
-            this.graph[left].splice(this.graph[left].indexOf(right),1);
-            this.graph[right].splice(this.graph[right].indexOf(left),1);
+            this.graph[left][this.graph[left].indexOf(right)] = null;
+            this.graph[right][this.graph[right].indexOf(left)] = null;
         }
         ////////////////col/////////////////////  
         for (i = 0; i < this.col.length; i++) {
@@ -101,8 +102,8 @@ class Maze{
             this.wall.push(wallclone);
             scene.add(wallclone);
 
-            this.graph[top].splice(this.graph[top].indexOf(bottom),1);
-            this.graph[bottom].splice(this.graph[bottom].indexOf(top),1);
+            this.graph[top][this.graph[top].indexOf(bottom)] = null;
+            this.graph[bottom][this.graph[bottom].indexOf(top)] = null;
         }
     }
 
@@ -201,17 +202,19 @@ class Maze{
             this.col.splice(i,1);
         }
 
-        this.graph[a].push(b);
-        this.graph[b].push(a);
-        
+        this.pushInGraph(a,b);
+        this.pushInGraph(b,a);
+        return;
         var start = a;
 
         var path = [];
-        for(let i = 0; i < this.graph[a].length; i++){
-            let x = DFS(this.graph,a,this.graph[a][i]);
-            if(x !== -1){
-                path.push(x);
-                break;
+        for(let i = 0; i < 4; i++){
+            if(this.graph[a][i] !== null){
+                let x = DFS(this.graph,a,this.graph[a][i]);
+                if(x !== -1){
+                    path.push(x);
+                    break;
+                }
             }
         }
 
@@ -231,9 +234,9 @@ class Maze{
             b = temp;
         }
 
-        this.graph[a].splice(this.graph[a].indexOf(b),1);
-        this.graph[b].splice(this.graph[b].indexOf(a),1);
-
+        this.graph[a][this.graph[a].indexOf(b)] = null;
+        this.graph[b][this.graph[b].indexOf(a)] = null;
+        
         let wallclone = new THREE.Mesh(new THREE.BoxGeometry(this.width, this.wallHeight, this.thickness), new THREE.MeshNormalMaterial());
 
         if(b - a === 1){      //add row
@@ -275,10 +278,11 @@ class Maze{
         this.wall.push(wallclone);
 
         function DFS(data,front,now){
+            console.log(now);
             if(now === start)return now;
             else {
-                for(let i = 0; i < data[now].length; i++){
-                    if(data[now][i] !== front){
+                for(let i = 0; i < 4; i++){
+                    if(data[now][i] !== null && data[now][i] !== front){
                         var x = DFS(data,now,data[now][i]);
 
                         if(x !== -1){
@@ -303,6 +307,18 @@ class Maze{
         let z = (Math.floor(n / this.n) * this.width) + this.width / 2;
         
         return new THREE.Vector3(x,0,z);
+    }
+
+    pushInGraph(a,b){
+        if(a - this.n === b)
+            this.graph[a][0] = b;
+        else if(a - 1 === b)
+            this.graph[a][1] = b;
+        else if(a + this.n === b)
+            this.graph[a][2] = b;
+        else if(a + 1 === b)
+            this.graph[a][3] = b;
+        else console.log("pushInGraph function Error!!!");
     }
 }
 
