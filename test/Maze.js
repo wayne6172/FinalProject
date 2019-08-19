@@ -16,20 +16,52 @@ class Maze{
 
         this.initMaze(m,n,width,thickness,wallHeight);
 
-
-        console.log(this.graph);
+        console.log(this.wall);
     }
 
     initMaze(m,n,width,thickness,wallHeight){
         this.initData(m,n);
 
-        //var totalinWall = new THREE.Object3D();
-        //var mat = new THREE.MeshNormalMaterial();
-        var topWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),new THREE.MeshNormalMaterial());
-        var bottomWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),new THREE.MeshNormalMaterial());
-        var leftWall = new THREE.Mesh(new THREE.BoxGeometry(thickness,wallHeight,m * width),new THREE.MeshNormalMaterial());
-        var rightWall = new THREE.Mesh(new THREE.BoxGeometry(thickness,wallHeight,m * width),new THREE.MeshNormalMaterial());
+        let loader = new THREE.TextureLoader();
+        loader.crossOrigin = '';
+        let textureOutX = loader.load('./texture/wall/1000-1000-2.jpg');
+        let textureOutY = loader.load('./texture/wall/1000-1000-2.jpg');
+        let textureOutZ = loader.load('./texture/wall/1000-1000-2.jpg');
+        let textureInZ = loader.load('./texture/wall/1000-1000-2.jpg');
+        let textureInY = loader.load('./texture/wall/1000-1000-2.jpg');
+
+        textureOutX.wrapS = textureOutX.wrapT = textureOutY.wrapS = textureOutY.wrapT = textureOutZ.wrapS = textureOutZ.wrapT = THREE.RepeatWrapping;
+        textureOutX.repeat.set(thickness / wallHeight, 1);
+        textureOutY.repeat.set(n, 50 / 1000);
+        textureOutZ.repeat.set(n, 1);
+
+        textureInY.repeat.set(1,50 / 1000);
+
+        let matArrayOut = [];
+        matArrayOut.push(new THREE.MeshBasicMaterial({map: textureOutX}),
+            new THREE.MeshBasicMaterial({map: textureOutX}),
+            new THREE.MeshBasicMaterial({map: textureOutY}),
+            new THREE.MeshBasicMaterial({map: textureOutY}),
+            new THREE.MeshBasicMaterial({map: textureOutZ}),
+            new THREE.MeshBasicMaterial({map: textureOutZ})
+        );
+
+        let matArrayIn = [];
+        matArrayIn.push(new THREE.MeshBasicMaterial({map: textureOutX}),
+            new THREE.MeshBasicMaterial({map: textureOutX}),
+            new THREE.MeshBasicMaterial({map: textureInY}),
+            new THREE.MeshBasicMaterial({map: textureInY}),
+            new THREE.MeshBasicMaterial({map: textureInZ}),
+            new THREE.MeshBasicMaterial({map: textureInZ})
+        );
+
+        var topWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),new THREE.MultiMaterial(matArrayOut));
+        var bottomWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),new THREE.MultiMaterial(matArrayOut));
+        var leftWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),new THREE.MultiMaterial(matArrayOut));
+        var rightWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),new THREE.MultiMaterial(matArrayOut));
         
+        leftWall.rotation.y = rightWall.rotation.y = Math.PI / 2;
+
         topWall.position.set(n * width / 2,wallHeight / 2,0);
         bottomWall.position.set(n * width / 2,wallHeight / 2,m * width);
         leftWall.position.set(0,wallHeight / 2,m * width / 2);
@@ -59,7 +91,7 @@ class Maze{
         
         ///////////row/////////////
         for (i = 0; i < this.row.length; i++) {
-            let wallclone = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), new THREE.MeshNormalMaterial());
+            let wallclone = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), new THREE.MultiMaterial(matArrayIn));
             wallclone.position.x = (this.row[i][1]) * width;
             wallclone.position.z = this.row[i][0] * width + (width / 2);
             wallclone.position.y = wallHeight / 2;
@@ -83,7 +115,7 @@ class Maze{
         }
         ////////////////col/////////////////////  
         for (i = 0; i < this.col.length; i++) {
-            let wallclone = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), new THREE.MeshNormalMaterial());
+            let wallclone = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), new THREE.MultiMaterial(matArrayIn));
             wallclone.position.z = (this.col[i][1]) * width;
             wallclone.position.x = this.col[i][0] * width + (width / 2);
             wallclone.position.y = wallHeight / 2;
@@ -204,6 +236,8 @@ class Maze{
 
         this.pushInGraph(a,b);
         this.pushInGraph(b,a);
+        
+        
         return;
         var start = a;
 

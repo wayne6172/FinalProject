@@ -1,19 +1,20 @@
 import * as THREE from 'three'
 
 class HUD{
-    constructor(target) {
-        this.initHUD();
+    constructor(target,mazeTotalWidth) {
+        this.initHUD(mazeTotalWidth);
 
-        target.add(this.cameraHUD2);
+        //target.add(this.cameraHUD2);
     }
 
-    initHUD(){
+    initHUD(mazeTotalWidth){
+        mazeTotalWidth /= 2;
         this.sceneHUD = new THREE.Scene();
         this.cameraHUD1 = new THREE.OrthographicCamera(-10.1,10.1,10.1,-10.1,1,50);
-        this.cameraHUD2 = new THREE.OrthographicCamera(-250, 250, 250, -250, -350, 350);
-        this.cameraHUD2.position.set(0,15,0);
+        this.cameraHUD2 = new THREE.OrthographicCamera(-mazeTotalWidth, mazeTotalWidth, mazeTotalWidth, -mazeTotalWidth, -350, 350);
+        this.cameraHUD2.position.set(mazeTotalWidth,15,mazeTotalWidth);
         this.cameraHUD2.up.set(1,0,0);
-        this.cameraHUD2.lookAt(new THREE.Vector3());
+        this.cameraHUD2.lookAt(new THREE.Vector3(mazeTotalWidth,0,mazeTotalWidth));
 
 
         var lineGeo = new THREE.Geometry();
