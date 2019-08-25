@@ -7,12 +7,14 @@ import Car from './Car.js'
 import HUD from './HUD.js'
 import NPC from './NPC.js'
 import Stats from 'stats-js'
+import THREE_Text from './text2D.js'
 
 var camera, renderer, stats, clock, controls, maze, hud, stats = new Stats();
 var raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(),pickables = [];
 var car, npc, npc2,npc3;
 var keyboard = new KeyboardState();
-var mazeWidth = 50, mazeSize = 30;
+var mazeWidth = 50, mazeSize = 15;
+var light;
 
 window.addEventListener('resize', onWindowResize, false);
 document.addEventListener('mousedown',onMouseDown,false);
@@ -30,7 +32,7 @@ function init() {
 	
     clock = new THREE.Clock();
 
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 10, 10000);
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 10, 750);
     scene.add(camera);
 
     var gridXZ = new THREE.GridHelper(500, 10, 'red', 'white');
@@ -71,9 +73,11 @@ function init() {
         function(texture){
             texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
             texture.repeat.set(mazeSize,mazeSize);
-            let plane = new THREE.Mesh(new THREE.PlaneGeometry(mazeWidth * mazeSize,mazeWidth * mazeSize), new THREE.MeshBasicMaterial({map: texture}))
+            let plane = new THREE.Mesh(new THREE.PlaneGeometry(mazeWidth * mazeSize,mazeWidth * mazeSize), new THREE.MeshPhongMaterial({map: texture}))
             plane.rotation.x = -Math.PI / 2;
             plane.position.set(mazeWidth * mazeSize / 2,0,mazeWidth * mazeSize / 2);
+
+            plane.receiveShadow = true;
             scene.add(plane);
         },undefined,function(xhr) {console.log('error loader texture');}
     );
@@ -89,7 +93,63 @@ function init() {
     scene.background = new THREE.Color( 0xcce0ff );
     scene.fog = new THREE.Fog( 0xcce0ff, 500, 700 );
     
+    // light
+    light = new THREE.DirectionalLight(0xaaaaaa);
+    light.castShadow = true;
+    light.shadow.mapSize.width = light.shadow.mapSize.height = 1024;
+    light.shadow.camera.left = light.shadow.camera.top = - (mazeWidth * mazeSize / 2 + 150);
+    light.shadow.camera.right = light.shadow.camera.bottom = (mazeWidth * mazeSize / 2 + 150);
+    light.shadow.camera.near = 1;
+    light.shadow.camera.far = (mazeWidth * mazeSize / 2 + 150);
+    light.shadow.bias = -0.01;
+
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+
+    light.position.set((mazeWidth * mazeSize / 2 + 50),200,(mazeWidth * mazeSize / 2 + 50));
+    light.target.position.set((mazeWidth * mazeSize / 2),0,(mazeWidth * mazeSize / 2));
+    scene.add(light.target);
+    scene.add(light,new THREE.AmbientLight(0x555555));
+    //scene.add(new THREE.CameraHelper(light.shadow.camera));
+    // light end
+
     document.getElementById('info').innerHTML = '迷宮為' + mazeSize + 'x' + mazeSize;
+
+    // BFS 
+
+    
+}
+
+function BFS_TEST(start_node){
+    let queue = [];
+    let isTraverse = new Array(maze.m * maze.n);
+    isTraverse.fill(false);
+
+    queue.push([start_node, 0]);
+    isTraverse[start_node] = true;
+    while(queue.length > 0){
+        let now = queue.shift();
+        isTraverse[now[0]] = true;
+
+        for(let i = 0; i < 4; i++){
+            if(maze.graph[now[0]][i] !== null && !isTraverse[maze.graph[now[0]][i]])
+                queue.push([maze.graph[now[0]][i], now[1] + 1]);
+        }
+        
+
+        let dis = new THREE_Text.MeshText2D(now[1],{
+            align: THREE_Text.textAlign.center,
+            font: '60px Arial',
+            fillStyle: '#ff0000',
+            antialias: false
+        });
+
+        dis.scale.set(0.5,0.5,0.5);
+        dis.rotation.x = -Math.PI / 2;
+        dis.rotation.z = -Math.PI / 2;
+        dis.position.copy(maze.getNodeToPos(now[0]).add(new THREE.Vector3(mazeWidth / 3,10,0)));
+        scene.add(dis);
+    }
 }
 
 function onWindowResize() {
@@ -151,6 +211,7 @@ function onMouseDown(e){
             if(x === 4){
                 npc3 = new NPC(maze,'orange','NPC3',0,3);
                 npc3.target = mazeSize * mazeSize - 1;
+                BFS_TEST(0);
             }
             else x++;
         }

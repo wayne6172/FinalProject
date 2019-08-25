@@ -162,6 +162,11 @@ class NPC extends Car{
         if(this.AstarPath.length === 0)return false;
         this.target = this.AstarPath.pop();
         this.targetNode.copy(this.maze.getNodeToPos(this.target));
+        
+        let shit = new THREE.Mesh(new THREE.SphereGeometry(5,8,6), new THREE.MeshBasicMaterial({color: new THREE.Color('yellow')}));
+        shit.position.copy(this.targetNode);
+        scene.add(shit);
+        
         return true;
     }
 

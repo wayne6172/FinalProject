@@ -15,8 +15,6 @@ class Maze{
         this.graph = [];
 
         this.initMaze(m,n,width,thickness,wallHeight);
-
-        console.log(this.wall);
     }
 
     initMaze(m,n,width,thickness,wallHeight){
@@ -38,27 +36,27 @@ class Maze{
         textureInY.repeat.set(1,50 / 1000);
 
         let matArrayOut = [];
-        matArrayOut.push(new THREE.MeshBasicMaterial({map: textureOutX}),
-            new THREE.MeshBasicMaterial({map: textureOutX}),
-            new THREE.MeshBasicMaterial({map: textureOutY}),
-            new THREE.MeshBasicMaterial({map: textureOutY}),
-            new THREE.MeshBasicMaterial({map: textureOutZ}),
-            new THREE.MeshBasicMaterial({map: textureOutZ})
+        matArrayOut.push(new THREE.MeshPhongMaterial({map: textureOutX}),
+            new THREE.MeshPhongMaterial({map: textureOutX}),
+            new THREE.MeshPhongMaterial({map: textureOutY}),
+            new THREE.MeshPhongMaterial({map: textureOutY}),
+            new THREE.MeshPhongMaterial({map: textureOutZ}),
+            new THREE.MeshPhongMaterial({map: textureOutZ})
         );
 
         let matArrayIn = [];
-        matArrayIn.push(new THREE.MeshBasicMaterial({map: textureOutX}),
-            new THREE.MeshBasicMaterial({map: textureOutX}),
-            new THREE.MeshBasicMaterial({map: textureInY}),
-            new THREE.MeshBasicMaterial({map: textureInY}),
-            new THREE.MeshBasicMaterial({map: textureInZ}),
-            new THREE.MeshBasicMaterial({map: textureInZ})
+        matArrayIn.push(new THREE.MeshPhongMaterial({map: textureOutX}),
+            new THREE.MeshPhongMaterial({map: textureOutX}),
+            new THREE.MeshPhongMaterial({map: textureInY}),
+            new THREE.MeshPhongMaterial({map: textureInY}),
+            new THREE.MeshPhongMaterial({map: textureInZ}),
+            new THREE.MeshPhongMaterial({map: textureInZ})
         );
 
-        var topWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),new THREE.MultiMaterial(matArrayOut));
-        var bottomWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),new THREE.MultiMaterial(matArrayOut));
-        var leftWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),new THREE.MultiMaterial(matArrayOut));
-        var rightWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),new THREE.MultiMaterial(matArrayOut));
+        var topWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),matArrayOut);
+        var bottomWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),matArrayOut);
+        var leftWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),matArrayOut);
+        var rightWall = new THREE.Mesh(new THREE.BoxGeometry(n * width,wallHeight,thickness),matArrayOut);
         
         leftWall.rotation.y = rightWall.rotation.y = Math.PI / 2;
 
@@ -91,7 +89,7 @@ class Maze{
         
         ///////////row/////////////
         for (i = 0; i < this.row.length; i++) {
-            let wallclone = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), new THREE.MultiMaterial(matArrayIn));
+            let wallclone = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), matArrayIn);
             wallclone.position.x = (this.row[i][1]) * width;
             wallclone.position.z = this.row[i][0] * width + (width / 2);
             wallclone.position.y = wallHeight / 2;
@@ -115,7 +113,7 @@ class Maze{
         }
         ////////////////col/////////////////////  
         for (i = 0; i < this.col.length; i++) {
-            let wallclone = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), new THREE.MultiMaterial(matArrayIn));
+            let wallclone = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), matArrayIn);
             wallclone.position.z = (this.col[i][1]) * width;
             wallclone.position.x = this.col[i][0] * width + (width / 2);
             wallclone.position.y = wallHeight / 2;
@@ -137,6 +135,13 @@ class Maze{
             this.graph[top][this.graph[top].indexOf(bottom)] = null;
             this.graph[bottom][this.graph[bottom].indexOf(top)] = null;
         }
+
+        this.wall.forEach(function(e){
+            e.traverse(function(t){
+                if(t instanceof THREE.Mesh)
+                    t.castShadow = t.receiveShadow = true;
+            })
+        });
     }
 
     // use kruskal's algorithm
