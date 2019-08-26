@@ -13,7 +13,7 @@ var camera, renderer, stats, clock, controls, maze, hud, stats = new Stats();
 var raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(),pickables = [];
 var car, npc, npc2,npc3;
 var keyboard = new KeyboardState();
-var mazeWidth = 50, mazeSize = 15;
+var mazeWidth = 50, mazeSize = 10;
 var light;
 
 window.addEventListener('resize', onWindowResize, false);
@@ -32,7 +32,7 @@ function init() {
 	
     clock = new THREE.Clock();
 
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 10, 750);
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 10, 300);
     scene.add(camera);
 
     var gridXZ = new THREE.GridHelper(500, 10, 'red', 'white');
@@ -61,7 +61,7 @@ function init() {
     car = new Car(maze,'green',null,0,camera);
     hud = new HUD(car.body,mazeWidth * mazeSize);
     ////
-    let t = new THREE.Mesh(new THREE.CylinderGeometry(15,15,100,64), new THREE.MeshBasicMaterial({color: 0x0000ff}));
+    let t = new THREE.Mesh(new THREE.CylinderGeometry(5,5,100,64), new THREE.MeshBasicMaterial({color: 0x0000ff}));
     t.position.set(475,50,475);
 
     scene.add(t);
@@ -91,7 +91,7 @@ function init() {
 
     //scene.fog = new THREE.Fog(0xffffff,500,700);
     scene.background = new THREE.Color( 0xcce0ff );
-    scene.fog = new THREE.Fog( 0xcce0ff, 500, 700 );
+    scene.fog = new THREE.Fog( 0xcce0ff, 250, 300 );
     
     // light
     light = new THREE.DirectionalLight(0xaaaaaa);
@@ -178,12 +178,14 @@ function render() {
     var WW = window.innerWidth;
     var HH = window.innerHeight;
 
+    //renderer.shadowMap.enabled = true;
     renderer.setScissorTest(true);
     renderer.setViewport(0,0,WW,HH);
     renderer.setScissor(0,0,WW,HH);
     renderer.clear();
     renderer.render(scene,camera);
 
+    //renderer.shadowMap.enabled = false;
     renderer.setViewport(WW * 0.6, HH * 0.6, WW * 0.4, HH * 0.4);
     renderer.setScissor(WW * 0.6, HH * 0.6, WW * 0.4, HH * 0.4);
     renderer.clear();

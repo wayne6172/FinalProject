@@ -13,7 +13,7 @@ class Car{
 
         if(camera){
             camera.position.set(-40,60,0);
-            camera.lookAt(this.body.position.clone().add(new THREE.Vector3(-5,100,0)).sub(camera.position));
+            camera.lookAt(this.body.position.clone().add(new THREE.Vector3(-5,90,0)).sub(camera.position));
             this.body.add(camera);
         }
         
@@ -24,8 +24,8 @@ class Car{
 
     buildBody(bodycolor,textName){
         let body = new THREE.Object3D();
-        let a = new THREE.Mesh(new THREE.CylinderGeometry(this.width,this.width,10,64),new THREE.MeshBasicMaterial({color: new THREE.Color(bodycolor)}));
-        let b = new THREE.Mesh(new THREE.BoxGeometry(this.width * 2,10,6),new THREE.MeshBasicMaterial({color: new THREE.Color(bodycolor)}));
+        let a = new THREE.Mesh(new THREE.CylinderGeometry(this.width,this.width,10,64),new THREE.MeshPhongMaterial({color: new THREE.Color(bodycolor)}));
+        let b = new THREE.Mesh(new THREE.BoxGeometry(this.width * 2,10,6),new THREE.MeshPhongMaterial({color: new THREE.Color(bodycolor)}));
         b.position.set(this.width,0,0);
         a.add(b);
         a.position.y = 5;
@@ -44,6 +44,11 @@ class Car{
             text.scale.set(0.5,0.5,0.5);
             body.add(text);
         }
+
+        body.traverse(function(e){
+            if(e instanceof THREE.Mesh)
+                e.castShadow = e.receiveShadow = true;
+        });
 
         return body;
     }
