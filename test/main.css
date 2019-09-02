@@ -4,20 +4,35 @@ body {
     overflow: hidden;
 }
 
-#hint {
+#info{
     position: absolute;
     top: 20px;
     width: 100%;
-    padding: 10px;
+    padding: 0px;
     text-align: center;
     color: #ffff00
 }
 
-#info {
+#Manhattan_hint{
     position: absolute;
-    top: 0px;
+    top: 80px;
     width: 100%;
-    padding: 10px;
+    text-align: center;
+    color: #ffff00
+}
+
+#Euclidean_hint {
+    position: absolute;
+    top: 110px;
+    width: 100%;
+    text-align: center;
+    color: #ffff00
+}
+
+#Dijkstra’s_Algorithm_hint{
+    position: absolute;
+    top: 50px;
+    width: 100%;
     text-align: center;
     color: #ffff00
 }

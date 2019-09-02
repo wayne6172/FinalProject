@@ -164,7 +164,7 @@ class Maze{
             }
         }
 
-        while(walls.length > 0){
+        while(walls.length > 75){
             let choose = Math.floor((walls.length * Math.random()));
             let a,b;
 

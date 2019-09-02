@@ -7,7 +7,8 @@ import Car from './Car.js'
 class NPC extends Car{
     constructor(maze,bodycolor,textName ,startCell = 0, traversMode = 0,camera = null){
         super(maze,bodycolor,textName,startCell,camera);
-
+        
+        this.bodycolor = bodycolor;
         this.NPCStateTable = Object.freeze({"initState" : 1,"findNextPoint" : 2,"GoToPoint" : 3});
         this.NPCState = this.NPCStateTable.initState;
         this.isTraverse = new Array(maze.m * maze.n);   // use to random DFS
@@ -15,9 +16,9 @@ class NPC extends Car{
         this.target = 0;
         this.stackPath = [];        // use to random DFS
         this.frontNode = -1;        // use to left traverse
-        this.speed = 120;
+        this.speed = 180;
         this.traversMode = traversMode;
-        this.traversModeTable = Object.freeze({"left": 0,"right": 1,"random": 2,"Astar": 3});
+        this.traversModeTable = Object.freeze({"left": 0,"right": 1,"random": 2,"Astar_Manhattan": 3,"Astar_Euclidean":4});
         this.AstarPath = [];
     }
 
@@ -93,16 +94,17 @@ class NPC extends Car{
         if(vel.z > 0)
             this.body.rotation.y *= -1;
 
-        if(this.targetNode.clone().sub(this.body.position).length() < 5){
+        if(this.targetNode.clone().sub(this.body.position).length() < 10){
             this.nowCell = this.target;
             return true;
         }
         return false;
     }
 
-    initAstarPath(){
+    initAstarPath_Manhattan(shitDis,colorString){
         let openList = [];
         let closeList = [];
+        let sumNode = 0;
         openList.push({NodeName: 0, NodeValue: 0, Parent: -1});
         while(openList.length > 0){
             let n = openList[0];
@@ -127,15 +129,17 @@ class NPC extends Car{
                     this.AstarPath.push(now);
                     now = closeList[i].Parent;
                 }
-                document.getElementById('hint').innerHTML = '最短路徑為' + this.AstarPath.length;
+                document.getElementById('Manhattan_hint').innerHTML += 'Manhattan heuristic function路徑長度為(橙色)' + this.AstarPath.length +
+                                        ' 參考cell數為(粉色): ' + sumNode;
                 return;
             }
 
             for(let i = 0; i < 4; i++){
                 if(this.maze.graph[n.NodeName][i] !== null){
-                    let dis = n.NodeValue + 1;
+                    let dis = this.maze.getNodeToPos(this.maze.graph[n.NodeName][i]).sub(this.maze.getNodeToPos(0)).length();
                     let ref = Math.abs(Math.floor(this.target / this.maze.n) - Math.floor(this.maze.graph[n.NodeName][i] / this.maze.n)) + Math.abs(this.target % this.maze.n - this.maze.graph[n.NodeName][i] % this.maze.n);
-                    
+                    ref *= this.maze.width;
+
                     let find = false;
                     for(let j = 0; j < openList.length; j++){
                         if(openList[j].NodeName === this.maze.graph[n.NodeName][i]){
@@ -151,6 +155,9 @@ class NPC extends Car{
                     if(!find){
                         let temp = {NodeName: this.maze.graph[n.NodeName][i], NodeValue: dis + ref, Parent: n.NodeName};
                         openList.push(temp);
+
+                        this.drawColor(temp.NodeName,shitDis,colorString);
+                        sumNode++;
                     }
                 }
             }
@@ -158,12 +165,83 @@ class NPC extends Car{
         
     }
 
+    initAstarPath_Euclidean(shitDis,colorString){
+        let openList = [];
+        let closeList = [];
+        let sumNode = 0;
+        openList.push({NodeName: 0, NodeValue: 0, Parent: -1});
+        while(openList.length > 0){
+            let n = openList[0];
+            let pos = 0;
+            for(let i = 1; i < openList.length; i++){
+                if(n.NodeValue > openList[i].NodeValue){
+                    n = openList[i];
+                    pos = i;
+                }
+            }
+            openList.splice(pos,1);
+
+            closeList.push(n);
+
+            if(n.NodeName === this.target){
+                let now = this.target;
+
+                for(let i = closeList.length - 1; i >= 0;){
+                    while(i >= 0 && closeList[i].NodeName !== now)i--;
+                    if(now === this.nowCell)break;
+
+                    this.AstarPath.push(now);
+                    now = closeList[i].Parent;
+                }
+                document.getElementById('Euclidean_hint').innerHTML = 'Euclidean heuristic function路徑長度為(白色)' + this.AstarPath.length +
+                                        ' 參考cell數為(紫色): ' + sumNode;
+                return;
+            }
+
+            for(let i = 0; i < 4; i++){
+                if(this.maze.graph[n.NodeName][i] !== null){
+                    let dis = this.maze.getNodeToPos(0).sub(this.maze.getNodeToPos(this.maze.graph[n.NodeName][i])).length();
+                    let ref = this.maze.getNodeToPos(this.maze.graph[n.NodeName][i]).sub(this.maze.getNodeToPos(this.target)).length();
+                    //let ref = Math.abs(Math.floor(this.target / this.maze.n) - Math.floor(this.maze.graph[n.NodeName][i] / this.maze.n)) + Math.abs(this.target % this.maze.n - this.maze.graph[n.NodeName][i] % this.maze.n);
+                    //ref *= this.maze.width;
+
+                    let find = false;
+                    for(let j = 0; j < openList.length; j++){
+                        if(openList[j].NodeName === this.maze.graph[n.NodeName][i]){
+                            find = true;
+                            openList[j].NodeValue = openList[j].NodeValue > dis + ref ? dis + ref : openList[j].NodeValue;
+                        }
+                    }
+                    for(let j = 0; j < closeList.length; j++){
+                        if(closeList[j].NodeName === this.maze.graph[n.NodeName][i])
+                            find = true;
+                    }
+
+                    if(!find){
+                        let temp = {NodeName: this.maze.graph[n.NodeName][i], NodeValue: dis + ref, Parent: n.NodeName};
+                        openList.push(temp);
+
+                        this.drawColor(temp.NodeName,shitDis,colorString);
+                        sumNode++;
+                    }
+                }
+            }
+        }
+        
+    }
+
+    drawColor(node,dis,colorString){
+        let shit = new THREE.Mesh(new THREE.SphereGeometry(5,8,6), new THREE.MeshBasicMaterial({color: new THREE.Color(colorString)}));
+        shit.position.copy(this.maze.getNodeToPos(node).add(new THREE.Vector3(0,0,dis)));
+        scene.add(shit);
+    }
+
     findNextPoint_Astar(){
         if(this.AstarPath.length === 0)return false;
         this.target = this.AstarPath.pop();
         this.targetNode.copy(this.maze.getNodeToPos(this.target));
         
-        let shit = new THREE.Mesh(new THREE.SphereGeometry(5,8,6), new THREE.MeshBasicMaterial({color: new THREE.Color('yellow')}));
+        let shit = new THREE.Mesh(new THREE.SphereGeometry(5,8,6), new THREE.MeshBasicMaterial({color: new THREE.Color(this.bodycolor)}));
         shit.position.copy(this.targetNode);
         scene.add(shit);
         
@@ -175,8 +253,11 @@ class NPC extends Car{
         switch (this.NPCState) {
             case this.NPCStateTable.initState:
                 switch(this.traversMode){
-                    case this.traversModeTable.Astar:
-                        this.initAstarPath();
+                    case this.traversModeTable.Astar_Manhattan:
+                        this.initAstarPath_Manhattan(10,'pink');
+                    break;
+                    case this.traversModeTable.Astar_Euclidean:
+                        this.initAstarPath_Euclidean(-10,'purple');
                     break;
                     default:
                         this.isTraverse.fill(false);
@@ -192,14 +273,16 @@ class NPC extends Car{
                     case this.traversModeTable.right:
                         res = this.findNextPoint_Right();
                     break;
-                    case this.traversModeTable.Astar:
+                    case this.traversModeTable.Astar_Manhattan:
+                    case this.traversModeTable.Astar_Euclidean:
                         res = this.findNextPoint_Astar();
                     break;
                 }
                 if(res)
                     this.NPCState = this.NPCStateTable.GoToPoint;
                 else {
-                    this.NPCState = this.NPCStateTable.initState;
+                    if(this.traversMode == this.traversModeTable.Astar_Euclidean || this.traversMode == this.traversModeTable.Astar_Manhattan);
+                    else this.NPCState = this.NPCStateTable.initState;
                     break;
                 }
                     

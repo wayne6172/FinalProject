@@ -11,9 +11,9 @@ import THREE_Text from './text2D.js'
 
 var camera, renderer, stats, clock, controls, maze, hud, stats = new Stats();
 var raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(),pickables = [];
-var car, npc, npc2,npc3;
+var car, npc, npc2,npc3,npc4;
 var keyboard = new KeyboardState();
-var mazeWidth = 50, mazeSize = 10;
+var mazeWidth = 50, mazeSize = 20, cameraFar = 300;
 var light;
 
 window.addEventListener('resize', onWindowResize, false);
@@ -32,7 +32,7 @@ function init() {
 	
     clock = new THREE.Clock();
 
-    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 10, 300);
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 10, cameraFar);
     scene.add(camera);
 
     var gridXZ = new THREE.GridHelper(500, 10, 'red', 'white');
@@ -90,8 +90,8 @@ function init() {
     
 
     //scene.fog = new THREE.Fog(0xffffff,500,700);
-    scene.background = new THREE.Color( 0xcce0ff );
-    scene.fog = new THREE.Fog( 0xcce0ff, 250, 300 );
+    scene.background = new THREE.Color( 0x222222 );
+    scene.fog = new THREE.Fog( 0x222222, cameraFar - 50, cameraFar );
     
     // light
     light = new THREE.DirectionalLight(0xaaaaaa);
@@ -103,13 +103,13 @@ function init() {
     light.shadow.camera.far = (mazeWidth * mazeSize / 2 + 150);
     light.shadow.bias = -0.01;
 
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
+    //renderer.shadowMap.enabled = true;
+    //renderer.shadowMap.type = THREE.PCFShadowMap;
 
     light.position.set((mazeWidth * mazeSize / 2 + 50),200,(mazeWidth * mazeSize / 2 + 50));
     light.target.position.set((mazeWidth * mazeSize / 2),0,(mazeWidth * mazeSize / 2));
     scene.add(light.target);
-    scene.add(light,new THREE.AmbientLight(0x555555));
+    scene.add(light,new THREE.AmbientLight(0x888888));
     //scene.add(new THREE.CameraHelper(light.shadow.camera));
     // light end
 
@@ -117,38 +117,40 @@ function init() {
 
     // BFS 
 
-    
+    npc3 = new NPC(maze,'orange','NPC3',0,3);
+    npc4 = new NPC(maze,'white','NPC3',0,4);
+    npc4.target = npc3.target = mazeSize * mazeSize - 1;
+    BFS_TEST(0);
 }
 
 function BFS_TEST(start_node){
-    let queue = [];
+    let queue = [],sum = 0;
     let isTraverse = new Array(maze.m * maze.n);
     isTraverse.fill(false);
 
     queue.push([start_node, 0]);
-    isTraverse[start_node] = true;
+    //isTraverse[start_node] = true;
     while(queue.length > 0){
         let now = queue.shift();
+
+        if(isTraverse[now[0]])continue;
         isTraverse[now[0]] = true;
+        sum++;
+
+        if(now[0] == npc3.target){
+            document.getElementById("Dijkstra’s_Algorithm_hint").innerHTML = 'Dijkstra’s Algorithm最短路徑長度為' + 
+                now[1] + ' 參考cells數為(黑色): ' + sum;
+            return;
+        }
 
         for(let i = 0; i < 4; i++){
             if(maze.graph[now[0]][i] !== null && !isTraverse[maze.graph[now[0]][i]])
                 queue.push([maze.graph[now[0]][i], now[1] + 1]);
         }
         
-
-        let dis = new THREE_Text.MeshText2D(now[1],{
-            align: THREE_Text.textAlign.center,
-            font: '60px Arial',
-            fillStyle: '#ff0000',
-            antialias: false
-        });
-
-        dis.scale.set(0.5,0.5,0.5);
-        dis.rotation.x = -Math.PI / 2;
-        dis.rotation.z = -Math.PI / 2;
-        dis.position.copy(maze.getNodeToPos(now[0]).add(new THREE.Vector3(mazeWidth / 3,10,0)));
-        scene.add(dis);
+        let shit = new THREE.Mesh(new THREE.SphereGeometry(5,8,6), new THREE.MeshBasicMaterial({color: new THREE.Color('black')}));
+        shit.position.copy(maze.getNodeToPos(now[0]).add(new THREE.Vector3(10,0,0)));
+        scene.add(shit);
     }
 }
 
@@ -167,8 +169,8 @@ function animate() {
     npc2.update(dt);
     npc.update(dt);
 
-    if(npc3 !== undefined)
     npc3.update(dt);
+    npc4.update(dt);
 
     requestAnimationFrame(animate);
     render();
@@ -180,24 +182,22 @@ function render() {
 
     //renderer.shadowMap.enabled = true;
     renderer.setScissorTest(true);
-    renderer.setViewport(0,0,WW,HH);
-    renderer.setScissor(0,0,WW,HH);
+    renderer.setViewport(0, 0, WW * 0.5, HH);
+    renderer.setScissor(0, 0, WW * 0.5, HH);
     renderer.clear();
     renderer.render(scene,camera);
 
     //renderer.shadowMap.enabled = false;
-    renderer.setViewport(WW * 0.6, HH * 0.6, WW * 0.4, HH * 0.4);
-    renderer.setScissor(WW * 0.6, HH * 0.6, WW * 0.4, HH * 0.4);
+    renderer.setViewport(WW * 0.5, 0, WW * 0.5, HH);
+    renderer.setScissor(WW * 0.5, 0, WW * 0.5, HH);
     renderer.clear();
     renderer.render(scene,hud.cameraHUD2);
     renderer.render(hud.sceneHUD,hud.cameraHUD1);
 }
 
-let x = 0;
-
 function onMouseDown(e){
     e.preventDefault();
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.x = (e.clientX / (window.innerWidth / 2)) * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
@@ -209,13 +209,6 @@ function onMouseDown(e){
             pickables.splice(pickables.indexOf(intersects[0].object),1);
             scene.remove(intersects[0].object);
             maze.removeWall(intersects[0].object.mazeData);
-
-            if(x === 4){
-                npc3 = new NPC(maze,'orange','NPC3',0,3);
-                npc3.target = mazeSize * mazeSize - 1;
-                BFS_TEST(0);
-            }
-            else x++;
         }
         
     }
