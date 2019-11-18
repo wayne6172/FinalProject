@@ -200,8 +200,6 @@ function initGame(){
 
     scene.add(t);
 
-    document.getElementById('info').innerHTML = '迷宮為' + mazeSize + 'x' + mazeSize;
-
     //// NPC
 
     npcs = [];
