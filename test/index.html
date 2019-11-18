@@ -8,10 +8,75 @@
     <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
 </head>
 <body>
-    <div id="info"></div>
-    <div id="Dijkstra’s_Algorithm_hint"></div>
-    <div id="Euclidean_hint"></div>
-    <div id="Manhattan_hint"></div>
+    <div id="InitGame">
+        <div id="GameName">Maze Project</div>
+        <button id="StartGame">開始遊戲</button>
+    </div>
+    <div id="InGame">
+    </div>
+    <div id="EndGame">
+        <div id="EndInfo"></div><br/>
+        <button id="BackGame">回主畫面</button>
+    </div>
+    <script id="myVertexShader" type="x-shader/x-vertex">
+        varying vec2 vUv;
+        void main() {
+            gl_Position = projectionMatrix* modelViewMatrix * vec4( position, 1.0);
+            vUv = uv;
+        }
+    </script>
+    <script id="myFragmentShader" type="x-shader/x-fragment">
+        uniform sampler2D texture;
+        varying vec2 vUv;
+        uniform vec2 center[CENTER_MAX];
+        uniform float gran;
+
+        void main() {
+            vec4 color;
+            
+            float dis;
+
+            float opacity = 0.0;
+            float nowOpacity = 0.0;
+
+            for(int i = 0; i < CENTER_MAX; i++){
+                dis = distance (gl_FragCoord.st, center[i]);
+
+                if (dis < 30.)  
+                    nowOpacity = 1.0;
+                else if(dis < 150.)
+                    nowOpacity = 1.0 - ((dis - 30.0) / 120.0);
+                
+                opacity = opacity > nowOpacity ? opacity : nowOpacity;
+            }
+
+            color = texture2D (texture, vUv) * opacity;
+            
+
+            gl_FragColor = color;
+        }
+    </script>
+    <script id="myPlaneTimeVertexShader" type="x-shader/x-vertex">
+        varying vec4 myeyepos;
+        void main() { 
+          
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          myeyepos = vec4(position,1.0);
+        }
+      </script>
+      <script id="myPlaneTimeFragmentShader" type="x-shader/x-fragment">
+        varying vec4 myeyepos;
+        uniform float pos;
+        void main() { 
+          vec3 mycolor;
+          if(myeyepos.x < pos)
+            mycolor = vec3(1,0,0);
+          else
+            mycolor = vec3(0,1,0);
+          
+          gl_FragColor = vec4(mycolor, 1.0); 
+        }
+      </script>      
     <script src="./build/vendor.dll.js"></script>
     <script src="./build/main.bundle.js"></script>
 </body>

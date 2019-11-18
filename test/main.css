@@ -4,35 +4,44 @@ body {
     overflow: hidden;
 }
 
-#info{
+#InGame{
     position: absolute;
     top: 20px;
     width: 100%;
     padding: 0px;
     text-align: center;
-    color: #ffff00
+    font-size: 30px;
+    color: #ffff00;
+    display: none;
 }
 
-#Manhattan_hint{
+#EndGame{
     position: absolute;
-    top: 80px;
+    top: 20px;
     width: 100%;
+    padding: 0px;
     text-align: center;
-    color: #ffff00
+    font-size: 30px;
+    color: #ffff00;
+    display: none;
 }
 
-#Euclidean_hint {
+#InitGame{
     position: absolute;
-    top: 110px;
+    top: 20px;
     width: 100%;
+    padding: 0px;
     text-align: center;
-    color: #ffff00
+    font-size: 80px;
+    color: #ffff00;
+    /*display: none;*/
 }
 
-#Dijkstra’s_Algorithm_hint{
-    position: absolute;
-    top: 50px;
-    width: 100%;
-    text-align: center;
-    color: #ffff00
+button{
+    font-size: 30px;
 }
+
+
+
+
+

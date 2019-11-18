@@ -22,11 +22,13 @@ class Maze{
 
         let loader = new THREE.TextureLoader();
         loader.crossOrigin = '';
-        let textureOutX = loader.load('./texture/wall/1000-1000-2.jpg');
-        let textureOutY = loader.load('./texture/wall/1000-1000-2.jpg');
-        let textureOutZ = loader.load('./texture/wall/1000-1000-2.jpg');
-        let textureInZ = loader.load('./texture/wall/1000-1000-2.jpg');
-        let textureInY = loader.load('./texture/wall/1000-1000-2.jpg');
+        let texturePath = './texture/wall/1.jpg';
+
+        let textureOutX = loader.load(texturePath);
+        let textureOutY = loader.load(texturePath);
+        let textureOutZ = loader.load(texturePath);
+        let textureInZ = loader.load(texturePath);
+        let textureInY = loader.load(texturePath);
 
         textureOutX.wrapS = textureOutX.wrapT = textureOutY.wrapS = textureOutY.wrapT = textureOutZ.wrapS = textureOutZ.wrapT = THREE.RepeatWrapping;
         textureOutX.repeat.set(thickness / wallHeight, 1);
@@ -164,7 +166,8 @@ class Maze{
             }
         }
 
-        while(walls.length > 75){
+        let t = 0;
+        while(walls.length > 0){
             let choose = Math.floor((walls.length * Math.random()));
             let a,b;
 
@@ -184,6 +187,7 @@ class Maze{
                     this.row.push([walls[choose][1],walls[choose][2]]);
                 else
                     this.col.push([walls[choose][1],walls[choose][2]]);
+                t++;
             }
             
             let temp = walls[choose];
@@ -192,6 +196,9 @@ class Maze{
 
             walls.pop();
         }
+
+        console.log(t);
+        console.log('牆密度為' + t / (n * (m - 1) + m * (n - 1)));
 
 
         function Union_set(x,y){
