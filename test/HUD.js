@@ -42,7 +42,7 @@ class HUD{
 
     initSceneHUD(width,height){
         let loader = new THREE.TextureLoader();
-        var texture = loader.load('../texture/bomb.png');
+        var texture = loader.load('./texture/bomb.png');
 
         let plane = new THREE.Mesh(new THREE.PlaneGeometry(100,100), new THREE.MeshBasicMaterial({
             transparent: true,
