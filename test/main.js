@@ -37,7 +37,7 @@ document.addEventListener('mousedown',onMouseDown,false);
 
 let loaderInit = new Promise(function(resolve,reject){
     var loader = new GLTFLoader();
-    loader.load('../model/RobotExpressive.glb', (gltf) => {
+    loader.load('./model/RobotExpressive.glb', (gltf) => {
         console.log('load complete');
         resolve(gltf);
     }, (xhr) => {
