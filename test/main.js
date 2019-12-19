@@ -12,6 +12,10 @@ import $ from 'jquery'
 import GLTFLoader from 'three-gltf-loader'
 
 var robotModel = {};
+var enemyModel;
+
+
+var canStart = 0;
 var camera, renderer, stats, clock, maze, hud, stats = new Stats();
 var exit, gameState = "Init", text;
 var systemTime = 0.0, angle = 0.0;
@@ -19,12 +23,16 @@ var raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(),pickables = [
 var car, npcs = [], npcEx;
 var keyboard = new KeyboardState();
 var mazeWidth = 70, mazeSize = 15, cameraFar = 1500; // 550
-var t;
+var FinalLine;
 var light;
+var openBigMap = false;
+var removeWall = [];
 
 $("#StartGame").click(function(e){
-    initGame();
-    gameState = "Game";
+    if(canStart == 1){
+        initGame();
+        gameState = "Game";
+    }
 });
 
 $('#BackGame').click(function(e){
@@ -35,7 +43,9 @@ $('#BackGame').click(function(e){
 window.addEventListener('resize', onWindowResize, false);
 document.addEventListener('mousedown',onMouseDown,false);
 
-let loaderInit = new Promise(function(resolve,reject){
+let loaderInit = [];
+
+loaderInit.push(new Promise(function(resolve,reject){
     var loader = new GLTFLoader();
     loader.load('./model/RobotExpressive.glb', (gltf) => {
         console.log('load complete');
@@ -45,9 +55,23 @@ let loaderInit = new Promise(function(resolve,reject){
     }, (error) => {
         reject(error);
     });
-})
+}));
 
-loaderInit.then(function(robot){
+for(let i = 0; i < 5; i++){
+    loaderInit.push(new Promise(function(resolve,reject){
+        var loader = new GLTFLoader();
+        loader.load('./model/Soldier.glb', (gltf) => {
+            console.log('load complete');
+            resolve(gltf);
+        }, (xhr) => {
+            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+        }, (error) => {
+            reject(error);
+        });
+    }));
+}
+
+function initRobot(robot){
     robotModel.body = robot.scene;
 
     robotModel.actions = {};
@@ -66,10 +90,47 @@ loaderInit.then(function(robot){
             action.loop = THREE.LoopOnce;
         }
     }
+}
+
+function initEnemy(res){
+    enemyModel = new Array(res.length);
+
+    for(let i = 0; i < res.length; i++){
+        enemyModel[i] = {};
+        enemyModel[i].body = res[i].scene;
+        enemyModel[i].actions = {};
+
+        enemyModel[i].mixer = new THREE.AnimationMixer(res[i].scene);
+        enemyModel[i].states = [ 'Idle', 'Run', 'TPose', 'Walk'];
+
+        for(let j = 0; j < res[i].animations.length; j++){
+            let clip = res[i].animations[j];
+            let action = enemyModel[i].mixer.clipAction(clip);
+            enemyModel[i].actions[clip.name] = action;
+        }
+    }
+}
+
+Promise.all(loaderInit).then(function(res){
+    console.log(res);
+    canStart = 1;
+    initRobot(res[0]);
+    res.shift();
+
+    initEnemy(res);
 
     init();
     mainAnimate();
-})
+});
+
+
+/*
+loaderInit.then(function(robot){
+    
+
+    init();
+    mainAnimate();
+})*/
 
 
 function init() {
@@ -84,7 +145,7 @@ function init() {
     clock = new THREE.Clock();
 
     camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 10, cameraFar);
-    camera.position.set(mazeSize * mazeWidth / 2,150,mazeSize * mazeWidth / 2);
+    camera.position.set(mazeSize * mazeWidth / 2,500,mazeSize * mazeWidth / 2);
     camera.lookAt(new THREE.Vector3());
     scene.add(camera);
 
@@ -121,14 +182,22 @@ function init() {
     );
 
     let nextPos = Math.floor((Math.random() * mazeSize * mazeSize));
-    npcEx = new NPC(maze,Math.floor(Math.random()*256*256*256),'',3,0,nextPos,robotModel,camera);
+    npcEx = new NPC(maze,robotModel,'',3,0,nextPos,camera);
     npcEx.speed = 120;
 
-    t = new THREE.Mesh(new THREE.CylinderGeometry(5,5,100,64), new THREE.MeshBasicMaterial({color: 0x00ff00}));
-    t.position.copy(maze.getNodeToPos(nextPos));
-    t.position.y = 50;
+    let mat = loader.load('./texture/FinalLine.png');
 
-    scene.add(t);
+    FinalLine = new THREE.Mesh(new THREE.PlaneGeometry(50,50), new THREE.MeshBasicMaterial({
+        map: mat,
+        transparent: true,
+        side: THREE.DoubleSide
+    }));
+    exit = nextPos;
+    FinalLine.position.copy(maze.getNodeToPos(exit));
+    FinalLine.position.y = 5;
+    FinalLine.rotation.x = -Math.PI / 2;
+
+    scene.add(FinalLine);
 
 
     scene.fog = new THREE.Fog( 0x222222, 550 - 50, 550 );
@@ -155,7 +224,7 @@ function initStart(){
     });
     npcs = [];
 
-    scene.remove(t);
+    scene.remove(FinalLine);
 
     maze = new Maze(mazeSize,mazeSize,mazeWidth,5,50);
     camera.far = 550;
@@ -163,14 +232,24 @@ function initStart(){
 
 
     let nextPos = Math.floor((Math.random() * mazeSize * mazeSize));
-    npcEx = new NPC(maze,Math.floor(Math.random()*256*256*256),'',3,0,nextPos,robotModel,camera);
+    npcEx = new NPC(maze,robotModel,'',3,0,nextPos,camera);
     npcEx.speed = 120;
 
-    t = new THREE.Mesh(new THREE.CylinderGeometry(5,5,100,64), new THREE.MeshBasicMaterial({color: 0x00ff00}));
-    t.position.copy(maze.getNodeToPos(nextPos));
-    t.position.y = 50;
+    let loader = new THREE.TextureLoader();
+    let mat = loader.load('./texture/FinalLine.png');
 
-    scene.add(t);
+    FinalLine = new THREE.Mesh(new THREE.PlaneGeometry(50,50), new THREE.MeshBasicMaterial({
+        map: mat,
+        transparent: true,
+        side: THREE.DoubleSide
+    }));
+    exit = Math.floor(Math.random() * mazeSize * mazeSize);
+    FinalLine.position.copy(maze.getNodeToPos(exit));
+    FinalLine.position.y = 5;
+    FinalLine.rotation.x = -Math.PI / 2;
+
+    npcEx.target = exit;
+    scene.add(FinalLine);
 
 
 }
@@ -187,27 +266,34 @@ function initGame(){
         pickables.push(e);
     });
 
-    car = new Car(maze,'green',null,0,robotModel,camera);
-    hud = new HUD(car.body,mazeWidth * mazeSize);
+    car = new Car(maze,robotModel,null,0,camera);
+    hud = new HUD(mazeWidth * mazeSize);
     ////
-    scene.remove(t);
-    //scene.remove(npcEx.body);
+    scene.remove(FinalLine);
+    scene.remove(npcEx.body);
 
-    t = new THREE.Mesh(new THREE.CylinderGeometry(5,5,100,64), new THREE.MeshBasicMaterial({color: 0x00ff00}));
+    let loader = new THREE.TextureLoader();
+    let mat = loader.load('./texture/FinalLine.png');
+
+    FinalLine = new THREE.Mesh(new THREE.PlaneGeometry(100,200), new THREE.MeshBasicMaterial({
+        map: mat,
+        transparent: true,
+        side: THREE.DoubleSide
+    }));
     exit = Math.floor(Math.random() * mazeSize * mazeSize);
-    t.position.copy(maze.getNodeToPos(exit));
-    t.position.y = 50;
+    FinalLine.position.copy(maze.getNodeToPos(exit));
+    FinalLine.position.y = 50;
 
-    scene.add(t);
+    scene.add(FinalLine);
 
     //// NPC
 
     npcs = [];
     npcs.push(
-        new NPC(maze,'yellow','NPC1',0,Math.floor((Math.random() * mazeSize * mazeSize))),
-        new NPC(maze,'blue','NPC2',1,Math.floor((Math.random() * mazeSize * mazeSize))),
-        new NPC(maze,'orange','NPC3',3,Math.floor((Math.random() * mazeSize * mazeSize)),Math.floor((Math.random() * mazeSize * mazeSize))),
-        new NPC(maze,'white','NPC4',4,Math.floor((Math.random() * mazeSize * mazeSize)),Math.floor((Math.random() * mazeSize * mazeSize))),
+        //new NPC(maze,enemyModel[0],'NPC1',0,Math.floor((Math.random() * mazeSize * mazeSize))),
+        //new NPC(maze,enemyModel[1],'NPC2',1,Math.floor((Math.random() * mazeSize * mazeSize))),
+        new NPC(maze,enemyModel[2],'NPC3',3,exit,Math.floor((Math.random() * mazeSize * mazeSize))),
+        new NPC(maze,enemyModel[3],'NPC4',4,exit,Math.floor((Math.random() * mazeSize * mazeSize))),
         //new NPC(maze,'black','NPC5',5,Math.floor((Math.random() * mazeSize * mazeSize)),Math.floor((Math.random() * mazeSize * mazeSize)))
     );
     
@@ -251,14 +337,22 @@ function initAnimate(dt){
     npcEx.update(dt);
 
     if(npcEx.NPCState === npcEx.NPCStateTable.WaintingTarget){
-        scene.remove(t);
+        scene.remove(FinalLine);
 
-        t = new THREE.Mesh(new THREE.CylinderGeometry(5,5,100,64), new THREE.MeshBasicMaterial({color: 0x00ff00}));
+        let loader = new THREE.TextureLoader();
+        let mat = loader.load('./texture/FinalLine.png');
+
+        FinalLine = new THREE.Mesh(new THREE.PlaneGeometry(50,50), new THREE.MeshBasicMaterial({
+            map: mat,
+            transparent: true,
+            side: THREE.DoubleSide
+        }));
         exit = Math.floor(Math.random() * mazeSize * mazeSize);
-        t.position.copy(maze.getNodeToPos(exit));
-        t.position.y = 50;
+        FinalLine.position.copy(maze.getNodeToPos(exit));
+        FinalLine.position.y = 5;
+        FinalLine.rotation.x = -Math.PI / 2;
 
-        scene.add(t);
+        scene.add(FinalLine);
         npcEx.target = exit;
         npcEx.NPCState = npcEx.NPCStateTable.initState;
     }
@@ -266,38 +360,38 @@ function initAnimate(dt){
 
 function gameAnimate(dt){
     
-    systemTime += dt;
+    if(gameState === "Game")
+        systemTime += dt;
 
-    let min = Math.floor(systemTime / 60);
-    let sec = Math.floor(systemTime % 60);
+    if(keyboard.up('M'))
+        openBigMap = !openBigMap;
 
-    
-    car.update(dt,keyboard,pickables);
+    if(!openBigMap){
+        car.update(dt,keyboard,pickables);
 
-    
+        npcs.forEach(function(e){
+            e.update(dt,car.nowCell);
+            if(e.NPCState === e.NPCStateTable.WaintingTarget){
+                e.target = Math.floor(Math.random() * mazeSize * mazeSize);
+                e.NPCState = e.NPCStateTable.initState;
+            }
+        });
 
-    npcs.forEach(function(e){
-        e.update(dt);
-        if(e.NPCState === e.NPCStateTable.WaintingTarget){
-            e.target = Math.floor(Math.random() * mazeSize * mazeSize);
-            e.NPCState = e.NPCStateTable.initState;
+
+        if(car.nowCell === exit){
+            gameState = "End";
         }
-    });
 
-
-    if(car.nowCell === exit){
-        document.getElementById('info').innerHTML = "GOALLLLLLL";
-        gameState = "End";
+        npcs.forEach(function(e){
+            if(car.nowCell === e.nowCell && car.state.stateName !== "Dead"){
+                car.state.stateName = "Dead";
+                car.state.keepTime = 3;
+                e.catchMode = false;
+                e.NPCState = e.NPCStateTable.WaintingTarget;
+                e.changeText('');
+            }
+        });
     }
-
-    npcs.forEach(function(e){
-        if(car.nowCell === e.nowCell && car.state.stateName !== "Dead"){
-            car.state.stateName = "Dead";
-            car.state.keepTime = 3;
-        }
-    });
-
-
 
 }
 
@@ -305,13 +399,26 @@ function mainAnimate() {
     var dt = clock.getDelta();
     stats.update();
     keyboard.update();
+
     if(gameState === "Init"){
         initAnimate(dt);
     }
     else if(gameState === "Game"){
         gameAnimate(dt);
+        let dir = car.body.getWorldPosition(new THREE.Vector3()).clone().sub(FinalLine.getWorldPosition(new THREE.Vector3()));
+        dir.y = 0;
+        let angle = Math.atan2(dir.x,dir.z);
+        FinalLine.rotation.y = angle;
+        //console.log(angle);
+
+        if(systemTime > 60){
+            gameState = "End";
+            openBigMap = false;
+        }
     }
     else if(gameState === "End"){
+        gameAnimate(dt);
+
         document.getElementById('InGame').style.display = "none";
         document.getElementById('EndGame').style.display = "inline";
         document.getElementById('EndInfo').innerHTML = "遊戲結束！ 花費時間為 "
@@ -328,7 +435,6 @@ function render(dt) {
     var WW = window.innerWidth;
     var HH = window.innerHeight;
 
-    //renderer.shadowMap.enabled = true;
     renderer.setScissorTest(true);
     renderer.setViewport(0, 0, WW, HH);
     renderer.setScissor(0, 0, WW, HH);
@@ -336,25 +442,60 @@ function render(dt) {
     renderer.render(scene,camera);
 
     //renderer.shadowMap.enabled = false;
-
+    
     if(gameState === "Game"){
         renderer.render(hud.sceneHUD,hud.cameraHUD1);
-
-        renderer.setViewport(WW * 0.7, 0, WW * 0.3, HH * 0.3);
-        renderer.setScissor(WW * 0.7, 0, WW * 0.3, HH * 0.3);
-        renderer.clear();
-
-        renderer.setRenderTarget(hud.rtTexture);
-        renderer.render(scene,hud.cameraHUD2);
-        
         let playPos = car.body.position.clone();
 
-        hud.updateTime(dt);
-        hud.updateMiniMapPos(playPos.x,playPos.z,car.body.rotation.y);
-        hud.updateCenter(playPos.x,playPos.z,car.body.rotation.y,maze);
+        if(removeWall.length > 0){
+            let len = removeWall.length;
+            for(let i = 0; i < len; ){
+                let find = false;
+                removeWall[i].position.y -= 0.8;
+                if(removeWall[i].position.y < -25){
+                    scene.remove(removeWall[i]);
+                    maze.removeWall(removeWall[i].mazeData);
+                    find = true;
+                    len--;
+                }
+                else i++;
 
-        renderer.setRenderTarget(null);
-        renderer.render(hud.sceneScrene,hud.cameraScrene);
+                if(find)
+                    removeWall.shift();
+            }
+        }
+        
+        if(!openBigMap){
+            renderer.setViewport(WW * 0.7, 0, WW * 0.3, HH * 0.3);
+            renderer.setScissor(WW * 0.7, 0, WW * 0.3, HH * 0.3);
+            renderer.clear();
+            renderer.render(hud.sceneMinimapHUD,hud.cameraMinimapHUD);
+            renderer.setRenderTarget(hud.rtTexture);
+            renderer.render(scene,hud.cameraHUD2);
+
+            hud.updateMiniMapPos(playPos.x,playPos.z,car.body.rotation.y);
+            hud.updateCenter(playPos.x,playPos.z,car.body.rotation.y,maze,openBigMap);
+
+            renderer.setRenderTarget(null);
+            renderer.render(hud.sceneScrene,hud.cameraScrene);
+        }
+        else {
+           
+            renderer.setViewport((WW - HH) * 0.5, 0, HH, HH);
+            renderer.setScissor((WW - HH) * 0.5, 0, HH, HH);
+            renderer.clear();
+            renderer.render(hud.sceneMinimapHUD,hud.cameraMinimapHUD);
+            renderer.setRenderTarget(hud.rtTexture);
+            renderer.render(scene,hud.cameraHUD3);
+
+            hud.updateMiniMapPos(playPos.x,playPos.z,car.body.rotation.y);
+            hud.updateCenter(playPos.x,playPos.z,car.body.rotation.y,maze,openBigMap);
+
+            renderer.setRenderTarget(null);
+            renderer.render(hud.sceneScrene,hud.cameraScrene);
+        }
+        
+        hud.updateTime(dt);
     }
 }
 
@@ -370,8 +511,9 @@ function onMouseDown(e){
         
         if('mazeData' in intersects[0].object){
             pickables.splice(pickables.indexOf(intersects[0].object),1);
-            scene.remove(intersects[0].object);
-            maze.removeWall(intersects[0].object.mazeData);
+            removeWall.push(intersects[0].object);
+
+            
         }
         
     }

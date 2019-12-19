@@ -6,20 +6,20 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --progress --mode=production",
-    "watch": "webpack --progress --mode=production --watch"
+    "watch": "webpack --progress --mode=production --watch",
+    "buildGLSL": "gulp build"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@babel/core": "^7.4.0",
-    "@babel/preset-env": "^7.4.2",
     "ar.js": "^1.7.1",
     "autodll-webpack-plugin": "^0.4.2",
     "babel-loader": "^8.0.5",
     "express": "^4.16.4",
     "jquery": "^3.3.1",
     "node-ar.js": "0.0.5",
-    "npm": "^6.9.0",
+    "npm": "^6.13.1",
+    "raw-loader": "^4.0.0",
     "shelljs": "^0.8.3",
     "socket.io": "^2.2.0",
     "socket.io-client": "^2.2.0",
@@ -27,7 +27,17 @@
     "three": "^0.110.0",
     "three-gltf-loader": "^1.110.0",
     "three-orbitcontrols": "^2.102.1",
+    "twgl.js": "^4.14.0",
     "webpack": "^4.29.6",
     "webpack-cli": "^3.3.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.7.4",
+    "@babel/preset-env": "^7.7.4",
+    "babelify": "^10.0.0",
+    "browserify": "^16.5.0",
+    "glslify": "^7.0.0",
+    "gulp": "^4.0.2",
+    "vinyl-source-stream": "^2.0.0"
   }
 }

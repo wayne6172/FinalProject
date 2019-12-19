@@ -90,8 +90,10 @@ class Maze{
         }
         
         ///////////row/////////////
+        let wall = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), matArrayIn);
+        let wallclone;
         for (i = 0; i < this.row.length; i++) {
-            let wallclone = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), matArrayIn);
+            wallclone = wall.clone();
             wallclone.position.x = (this.row[i][1]) * width;
             wallclone.position.z = this.row[i][0] * width + (width / 2);
             wallclone.position.y = wallHeight / 2;
@@ -115,7 +117,7 @@ class Maze{
         }
         ////////////////col/////////////////////  
         for (i = 0; i < this.col.length; i++) {
-            let wallclone = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), matArrayIn);
+            wallclone = wall.clone();
             wallclone.position.z = (this.col[i][1]) * width;
             wallclone.position.x = this.col[i][0] * width + (width / 2);
             wallclone.position.y = wallHeight / 2;
@@ -167,7 +169,7 @@ class Maze{
         }
 
         let t = 0;
-        while(walls.length > 0){
+        while(walls.length > 0){           // 5->45%  50->35%   90->25%
             let choose = Math.floor((walls.length * Math.random()));
             let a,b;
 

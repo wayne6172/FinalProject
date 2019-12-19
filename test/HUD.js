@@ -1,10 +1,12 @@
 import * as THREE from 'three'
-import { PlaneGeometry, MeshBasicMaterial } from 'three';
+import myPlaneTimeVertex from './GLSL/myPlaneTimeVertex.glsl'
+import myPlaneTimeFragment from './GLSL/myPlaneTimeFragment.glsl'
+import myMinimapVertex from './GLSL/myMinimapVertex.glsl'
+import myMinimapFragment from './GLSL/myMinimapFragment.glsl'
 
-var temp;
 class HUD{
-    constructor(target,mazeTotalWidth) {
-        this.centerMaxSize = 800;
+    constructor(mazeTotalWidth) {
+        this.centerMaxSize = 1000;
         this.centerSet = new Array(this.centerMaxSize);
         this.centerSet3 = new Array(this.centerMaxSize);
 
@@ -30,25 +32,54 @@ class HUD{
         this.initSceneHUD(windowWidth,windowHeight);
 
         this.cameraHUD1 = new THREE.OrthographicCamera(-windowWidth / 2,windowWidth / 2,windowHeight / 2,-windowHeight / 2,1,50);
-        this.cameraHUD2 = new THREE.OrthographicCamera(-mazeTotalWidth / 2, mazeTotalWidth / 2, mazeTotalWidth / 2, -mazeTotalWidth / 2, -350, 350);
+        this.cameraHUD2 = new THREE.OrthographicCamera(-windowWidth / 6, windowWidth / 6, windowHeight / 6, -windowHeight / 6, -50, 350);
+        this.cameraHUD3 = new THREE.OrthographicCamera(-mazeTotalWidth, mazeTotalWidth, mazeTotalWidth, -mazeTotalWidth, -50, 350);
+
         this.cameraHUD2.position.set(mazeTotalWidth,15,mazeTotalWidth);
         this.cameraHUD2.up.set(1,0,0);
         this.cameraHUD2.lookAt(new THREE.Vector3(mazeTotalWidth,0,mazeTotalWidth));
         this.cameraHUD1.position.set(0,0,10);
 
+        this.cameraHUD3.up.set(1,0,0);
+        this.cameraHUD3.position.set(mazeTotalWidth,15,mazeTotalWidth);
+        this.cameraHUD3.lookAt(new THREE.Vector3(mazeTotalWidth,0,mazeTotalWidth));
+
         /*var box = new THREE.Mesh(new THREE.BoxGeometry(500,500,5), new THREE.MeshNormalMaterial());
         this.sceneHUD.add(box);*/
+
+        let width = window.innerWidth / 2;
+        let height = window.innerHeight / 2;
+
+        this.sceneMinimapHUD = new THREE.Scene();
+        this.cameraMinimapHUD = new THREE.OrthographicCamera(-width - 0.5,width + 0.5,height + 0.5,-height - 0.5,1,10);
+        this.cameraMinimapHUD.position.z = 5;
+
+        let lineGeo = new THREE.Geometry();
+        lineGeo.vertices.push(
+            new THREE.Vector3(-width, -height, 0),
+            new THREE.Vector3(width, -height, 0),
+            new THREE.Vector3(width, height, 0),
+            new THREE.Vector3(-width, height, 0),
+            new THREE.Vector3(-width, -height, 0)
+        );
+        let line = new THREE.Line(lineGeo,
+            new THREE.LineBasicMaterial({
+                color: 0xffffff
+            })
+        );
+
+        this.sceneMinimapHUD.add(line);
     }
 
     initSceneHUD(width,height){
         let loader = new THREE.TextureLoader();
         var texture = loader.load('./texture/bomb.png');
 
-        let plane = new THREE.Mesh(new THREE.PlaneGeometry(100,100), new THREE.MeshBasicMaterial({
+        let plane = new THREE.Mesh(new THREE.PlaneGeometry(80,80), new THREE.MeshBasicMaterial({
             transparent: true,
             map: texture
         }))
-        plane.position.set(width / 4,height / 8 * 3,0);
+        plane.position.set(-width / 32 * 15,-height / 16 * 7,0);
         this.sceneHUD.add(plane);
 
         this.planeTimeMat = new THREE.ShaderMaterial({
@@ -62,13 +93,13 @@ class HUD{
                 value: -(width / 4 - 70)
               }
             },
-            vertexShader: document.getElementById( 'myPlaneTimeVertexShader' ).textContent,
-            fragmentShader: document.getElementById( 'myPlaneTimeFragmentShader' ).textContent
+            vertexShader: myPlaneTimeVertex,
+            fragmentShader: myPlaneTimeFragment
         });
 
         let timePlane = new THREE.Mesh(new THREE.PlaneGeometry((width / 4 - 70) * 2, 40), 
                 this.planeTimeMat);
-        timePlane.position.set(0,height / 8 * 3,0);
+        timePlane.position.set(-width / 32 * 8,-height / 16 * 7,0);
         this.sceneHUD.add(timePlane);
     }
 
@@ -82,12 +113,13 @@ class HUD{
 
         this.rttmaterial = new THREE.ShaderMaterial( {
             uniforms: {
-                gran: {type: "f", value: 100},
+                minRange: {type: "f", value: 30},
+                maxRange: {type: "f", value: 125},
                 texture: {type: "t", value: this.rtTexture},
                 center: {type: "v2v", value: this.centerSet}
             },
-            vertexShader: document.getElementById( 'myVertexShader' ).textContent,
-            fragmentShader: '#define CENTER_MAX  ' + this.centerMaxSize + '\n' + document.getElementById( 'myFragmentShader' ).textContent} 
+            vertexShader: myMinimapVertex,
+            fragmentShader: '#define CENTER_MAX  ' + this.centerMaxSize + '\n' + myMinimapFragment} 
         );
         var plane = new THREE.PlaneBufferGeometry( 300,300 );  // width, height
         var quad = new THREE.Mesh (plane, this.rttmaterial);
@@ -100,7 +132,12 @@ class HUD{
 
     updateTime(dt){
         this.time -= dt;
-        this.planeTimeMat.uniforms.pos.value = -(window.innerWidth / 4 - 70) + ((window.innerWidth / 4 - 70) * 2) * (60 - this.time) / 60;
+        this.planeTimeMat.uniforms.pos.value = (window.innerWidth / 4 - 70) + -((window.innerWidth / 4 - 70) * 2) * (60 - this.time) / 60;
+
+        if(this.time < 10)
+            this.planeTimeMat.uniforms.color.value.set(1,0,0);
+        else 
+            this.planeTimeMat.uniforms.color.value.set(0,1,0);
     }
 
     updateMiniMapPos(playPosX,playPosZ,rot){
@@ -110,7 +147,7 @@ class HUD{
         //console.log(playPosX + ' ' + 15 + ' ' + playPosZ);
     }
 
-    updateCenter(playPosX,playPosZ,rot,maze){
+    updateCenter(playPosX,playPosZ,rot,maze,openBigMap){
         let playXPercent = 0.5;
         let playYPercent = 0.5;
         let playMiniMapX;
@@ -122,13 +159,29 @@ class HUD{
             let prePos = this.centerSet3[i].clone();
             let nowPos = new THREE.Vector3(playPosX,0,playPosZ);
 
-            let t = prePos.clone().sub(nowPos).applyAxisAngle(new THREE.Vector3(0,1,0),-rot);
+            if(openBigMap){
+                let t = prePos.sub(new THREE.Vector3(maze.n * maze.width / 2,0,maze.m * maze.width / 2))
+                playXPercent = t.z / (maze.n * maze.width) + 0.5;
+                playYPercent = t.x / (maze.m * maze.width) + 0.5;
+                
+                playMiniMapX = window.innerHeight * playXPercent + (window.innerWidth - window.innerHeight) * 0.5;
+                playMiniMapY = window.innerHeight * playYPercent;
 
-            playXPercent = t.z / (maze.n * maze.width / 2) + 0.5;
-            playYPercent = t.x / (maze.m * maze.width / 2) + 0.5;
-              
-            playMiniMapX = window.innerWidth * 0.3 * playXPercent + window.innerWidth * 0.7;
-            playMiniMapY = window.innerHeight * 0.3 * playYPercent;
+                this.rttmaterial.uniforms.minRange.value = 20.0;
+                this.rttmaterial.uniforms.maxRange.value = 100.0;
+            }
+            else {
+                let t = prePos.clone().sub(nowPos).applyAxisAngle(new THREE.Vector3(0,1,0),-rot);
+            
+                playXPercent = t.z / (window.innerWidth / 3) + 0.5;
+                playYPercent = t.x / (window.innerHeight / 3) + 0.5;
+                
+                playMiniMapX = window.innerWidth * 0.3 * playXPercent + window.innerWidth * 0.7;
+                playMiniMapY = window.innerHeight * 0.3 * playYPercent;
+
+                this.rttmaterial.uniforms.minRange.value = 30.0;
+                this.rttmaterial.uniforms.maxRange.value = 125.0;
+            } 
 
             this.rttmaterial.uniforms.center.value[i].copy(new THREE.Vector2(playMiniMapX,playMiniMapY));
         }

@@ -2,15 +2,15 @@ import {scene} from './initScene.js'
 import * as THREE from 'three'
 import THREE_Text from './text2D.js'
 import AnimateKey from './AnimateKey.js'
-import GLTFLoader from 'three-gltf-loader'
 
 class Car{
-    constructor(maze,bodycolor,textName = null,startCell = 0,robot = null,camera = null){
+    constructor(maze,model,textName = null,startCell = 0,camera = null){
         this.nowCell = startCell;
         this.width = 10;
-        this.robot = robot
+        this.model = model
 
-        this.body = this.buildBody(robot,bodycolor,textName);
+        this.text = null;
+        this.body = this.buildBody(model,textName);
         this.maze = maze;
         this.rot = Math.PI / 2;
         this.speed = 0;
@@ -37,57 +37,65 @@ class Car{
         scene.add(this.body);
     }
 
-    buildBody(robot,bodycolor,textName){
-        let body = new THREE.Object3D();
-        if(robot == null){
-            let a = new THREE.Mesh(new THREE.CylinderGeometry(this.width,this.width,10,64),new THREE.MeshPhongMaterial({color: new THREE.Color(bodycolor)}));
-            let b = new THREE.Mesh(new THREE.BoxGeometry(this.width * 2,10,6),new THREE.MeshPhongMaterial({color: new THREE.Color(bodycolor)}));
-            b.position.set(this.width,0,0);
-            a.add(b);
-            a.position.y = 5;
+    changeText(text){
+        this.body.remove(this.text);
+        scene.remove(this.text);
 
-            body.add(a);
+        this.text = new THREE_Text.SpriteText2D("  " + text,{
+            align: THREE_Text.textAlign.center,
+            font: '40px Arial',
+            fillStyle: '#ff0000',
+            antialias: true
+        });
+
+        this.text.position.set(0,60,0);
+        this.text.scale.set(0.5,0.5,0.5);
+        scene.add(this.text);
+        this.body.add(this.text);
+    }
+
+    buildBody(model,textName){
+        let body = new THREE.Object3D();
+        let mat = new THREE.TextureLoader().load('./texture/soft_shadow.png');
+
+        let shadow = new THREE.Mesh(new THREE.PlaneGeometry(15.5,15.5),new THREE.MeshBasicMaterial({
+            map: mat,
+            transparent: true,
+        }));
+
+        shadow.rotation.x = -Math.PI / 2;
+        shadow.position.y = 3;
+        
+        
+
+        body.add(model.body);
+        body.add(shadow);
+
+        if(this.model.actions['Running'] !== undefined){
+            this.activeAction = this.model.actions['Running'];
+            model.body.scale.set(5,5,5);
+            model.body.rotation.y = Math.PI / 2;
         }
         else {
-            
-            robot.body.rotation.y = Math.PI / 2;
-            robot.body.scale.set(5,5,5);
-            body.add(robot.body);
-
-            /*this.actions = {};
-            this.mixer = new THREE.AnimationMixer(robot.scene);
-    
-            this.states = [ 'Idle', 'Walking', 'Running', 'Dance', 'Death', 'Sitting', 'Standing' ];
-            this.emotes = [ 'Jump', 'Yes', 'No', 'Wave', 'Punch', 'ThumbsUp' ];
-    
-            for(let i = 0; i < robot.animations.length; i++){
-                let clip = robot.animations[i];
-                let action = this.mixer.clipAction(clip);
-                this.actions[clip.name] =  action;
-    
-                if(this.emotes.indexOf(clip.name) >= 0 || this.states.indexOf(clip.name) >= 4){
-                    action.clampWhenFinished = true;
-                    action.loop = THREE.LoopOnce;
-                }
-            }*/
-    
-            this.activeAction = this.robot.actions['Running'];
-            this.activeAction.play();
-
+            this.activeAction = this.model.actions['Run'];
+            model.body.scale.set(25,25,25);
+            model.body.rotation.y = -Math.PI / 2;
         }
+        this.activeAction.play();
+
         
 
         if(textName !== null){
-            var text = new THREE_Text.SpriteText2D("  " + textName,{
+            this.text = new THREE_Text.SpriteText2D("  " + textName,{
                 align: THREE_Text.textAlign.center,
                 font: '40px Arial',
                 fillStyle: '#ff0000',
                 antialias: true
             });
 
-            text.position.set(0,60,0);
-            text.scale.set(0.5,0.5,0.5);
-            body.add(text);
+            this.text.position.set(0,60,0);
+            this.text.scale.set(0.5,0.5,0.5);
+            body.add(this.text);
         }
 
         body.traverse(function(e){
@@ -99,8 +107,7 @@ class Car{
     }
 
     update(dt,keyboard,pickables){
-        keyboard.update();
-        this.robot.mixer.update(dt);
+        this.model.mixer.update(dt);
         if(this.state.stateName === "Normal")
             this.normalUpdate(keyboard,pickables);
         else if(this.state.stateName === "Dead"){
@@ -124,24 +131,24 @@ class Car{
         let action = "Idle";
 
         if(keyboard.pressed('right')){
-            this.rot -= 0.10;
+            this.rot -= 0.06;
             action = "Walking";
         }
         if(keyboard.pressed('left')){
-            this.rot += 0.10;
+            this.rot += 0.06;
             action = "Walking";
         }
         if(keyboard.pressed('up')){
-            nextPos = this.body.position.clone().add(new THREE.Vector3(3,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), this.rot));
+            nextPos = this.body.position.clone().add(new THREE.Vector3(2,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), this.rot));
             action = "Running";
         }
         if(keyboard.pressed('down')){
-            nextPos = this.body.position.clone().add(new THREE.Vector3(-3,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), this.rot));
+            nextPos = this.body.position.clone().add(new THREE.Vector3(-2,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), this.rot));
             action = "Running";
         }
 
-        if(this.robot !== null){
-            this.fadeToAction(action,0.25)
+        if(this.model !== null){
+            this.fadeToAction(action,0.15)
         }
 
         this.body.rotation.y = this.rot;
@@ -158,7 +165,8 @@ class Car{
             this.animateKey.start = this.camera.position.clone();
             this.camera.position.set(-80,70,0);
 
-            let rayCaster = new THREE.Raycaster(this.camera.getWorldPosition(new THREE.Vector3()),this.body.position.clone().sub(this.camera.getWorldPosition(new THREE.Vector3())).normalize());
+            let rayCaster = new THREE.Raycaster(this.camera.getWorldPosition(new THREE.Vector3()),
+                this.body.position.clone().sub(this.camera.getWorldPosition(new THREE.Vector3())).normalize());
             rayCaster.far = this.camera.position.length();
             var intersects = rayCaster.intersectObjects(pickables);
 
@@ -178,11 +186,11 @@ class Car{
     }
 
     fadeToAction(name,duration){
-        if(this.previousAction == this.robot.actions[name])
+        if(this.previousAction == this.model.actions[name])
             return;
 
         this.previousAction = this.activeAction;
-        this.activeAction = this.robot.actions[ name ];
+        this.activeAction = this.model.actions[ name ];
         this.previousAction.fadeOut( duration );
 
         this.activeAction
