@@ -27,12 +27,20 @@ var FinalLine;
 var light;
 var openBigMap = false;
 var removeWall = [];
+var isremoveWall = 2;
+var gameTime = 120;
 
 $("#StartGame").click(function(e){
     if(canStart == 1){
         initGame();
         gameState = "Game";
     }
+});
+
+$('#info').click(function(e){
+    clock.stop();
+    alert("使用方向鍵上下左右可以控制機器人\n使用\"M\"可以打開大地圖\n可以藉由滑鼠點擊牆壁一次來移除牆，但只有兩次喔\n\n小心別被NPC抓到，會暫時倒地一陣子\n\n找到出口旗幟並走到吧，加油！！！");
+    clock.start();
 });
 
 $('#BackGame').click(function(e){
@@ -132,10 +140,15 @@ loaderInit.then(function(robot){
     mainAnimate();
 })*/
 
+function onunloadEvent(){
+    console.log('x');
+}
 
 function init() {
     initScene();
     scene.background = new THREE.Color( 0x222222 );
+
+    document.addEventListener('offline',onunloadEvent,false);
 
     stats.domElement.style.position = 'absolute';
     stats.domElement.style.top = '0px';
@@ -267,7 +280,7 @@ function initGame(){
     });
 
     car = new Car(maze,robotModel,null,0,camera);
-    hud = new HUD(mazeWidth * mazeSize);
+    hud = new HUD(mazeWidth * mazeSize,gameTime);
     ////
     scene.remove(FinalLine);
     scene.remove(npcEx.body);
@@ -280,7 +293,12 @@ function initGame(){
         transparent: true,
         side: THREE.DoubleSide
     }));
-    exit = Math.floor(Math.random() * mazeSize * mazeSize);
+    let where = Math.floor(Math.random() * 2);
+    if(where === 0)
+        exit = (mazeSize - 1) + (Math.floor(mazeSize * Math.random()) * mazeSize);
+    else
+        exit = (mazeSize - 1) * mazeSize + Math.floor(mazeSize * Math.random())
+
     FinalLine.position.copy(maze.getNodeToPos(exit));
     FinalLine.position.y = 50;
 
@@ -292,8 +310,9 @@ function initGame(){
     npcs.push(
         //new NPC(maze,enemyModel[0],'NPC1',0,Math.floor((Math.random() * mazeSize * mazeSize))),
         //new NPC(maze,enemyModel[1],'NPC2',1,Math.floor((Math.random() * mazeSize * mazeSize))),
+        new NPC(maze,enemyModel[0],'NPC1',3,exit,Math.floor((Math.random() * mazeSize * mazeSize))),
+        new NPC(maze,enemyModel[1],'NPC2',4,exit,Math.floor((Math.random() * mazeSize * mazeSize))),
         new NPC(maze,enemyModel[2],'NPC3',3,exit,Math.floor((Math.random() * mazeSize * mazeSize))),
-        new NPC(maze,enemyModel[3],'NPC4',4,exit,Math.floor((Math.random() * mazeSize * mazeSize))),
         //new NPC(maze,'black','NPC5',5,Math.floor((Math.random() * mazeSize * mazeSize)),Math.floor((Math.random() * mazeSize * mazeSize)))
     );
     
@@ -383,12 +402,18 @@ function gameAnimate(dt){
         }
 
         npcs.forEach(function(e){
+            if(e.catchMode && car.state.stateName === "Dead"){
+                e.catchMode = false;
+                e.NPCState = e.NPCStateTable.WaintingTarget;
+                e.changeText(e.textName);
+            }
+
             if(car.nowCell === e.nowCell && car.state.stateName !== "Dead"){
                 car.state.stateName = "Dead";
                 car.state.keepTime = 3;
                 e.catchMode = false;
                 e.NPCState = e.NPCStateTable.WaintingTarget;
-                e.changeText('');
+                e.changeText(e.textName);
             }
         });
     }
@@ -397,6 +422,7 @@ function gameAnimate(dt){
 
 function mainAnimate() {
     var dt = clock.getDelta();
+
     stats.update();
     keyboard.update();
 
@@ -411,7 +437,7 @@ function mainAnimate() {
         FinalLine.rotation.y = angle;
         //console.log(angle);
 
-        if(systemTime > 60){
+        if(systemTime > gameTime){
             gameState = "End";
             openBigMap = false;
         }
@@ -501,6 +527,7 @@ function render(dt) {
 
 function onMouseDown(e){
     e.preventDefault();
+
     mouse.x = (e.clientX / (window.innerWidth)) * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
@@ -509,11 +536,14 @@ function onMouseDown(e){
     if(intersects.length > 0){
         console.log(intersects[0]);
         
+        
+
         if('mazeData' in intersects[0].object){
+            if(isremoveWall === 0)return;
+            else isremoveWall--;
+            
             pickables.splice(pickables.indexOf(intersects[0].object),1);
             removeWall.push(intersects[0].object);
-
-            
         }
         
     }

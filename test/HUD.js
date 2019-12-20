@@ -5,7 +5,7 @@ import myMinimapVertex from './GLSL/myMinimapVertex.glsl'
 import myMinimapFragment from './GLSL/myMinimapFragment.glsl'
 
 class HUD{
-    constructor(mazeTotalWidth) {
+    constructor(mazeTotalWidth,gameTime) {
         this.centerMaxSize = 1000;
         this.centerSet = new Array(this.centerMaxSize);
         this.centerSet3 = new Array(this.centerMaxSize);
@@ -18,7 +18,9 @@ class HUD{
 
         this.initHUD(mazeTotalWidth);
         this.initScrene();
-        this.time = 60;
+        this.gameTime = gameTime;
+        this.time = gameTime;
+        this.alertTime = gameTime * 0.1;
 
         //target.add(this.cameraHUD2);
     }
@@ -132,9 +134,9 @@ class HUD{
 
     updateTime(dt){
         this.time -= dt;
-        this.planeTimeMat.uniforms.pos.value = (window.innerWidth / 4 - 70) + -((window.innerWidth / 4 - 70) * 2) * (60 - this.time) / 60;
+        this.planeTimeMat.uniforms.pos.value = (window.innerWidth / 4 - 70) + -((window.innerWidth / 4 - 70) * 2) * (this.gameTime - this.time) / this.gameTime;
 
-        if(this.time < 10)
+        if(this.time < this.alertTime)
             this.planeTimeMat.uniforms.color.value.set(1,0,0);
         else 
             this.planeTimeMat.uniforms.color.value.set(0,1,0);

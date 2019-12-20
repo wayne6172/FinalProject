@@ -9,10 +9,11 @@ class Car{
         this.width = 10;
         this.model = model
 
+        this.textName = textName;
         this.text = null;
         this.body = this.buildBody(model,textName);
         this.maze = maze;
-        this.rot = Math.PI / 2;
+        this.rot = -Math.PI / 4;
         this.speed = 0;
         this.camera = camera;
         this.animateKey = new AnimateKey();

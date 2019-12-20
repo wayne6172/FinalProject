@@ -28,7 +28,7 @@ body {
 
 #InitGame{
     position: absolute;
-    top: 20px;
+    top: 10px;
     width: 100%;
     padding: 0px;
     text-align: center;
@@ -41,7 +41,8 @@ button{
     font-size: 30px;
 }
 
-
-
-
-
+#info{
+    position: absolute;
+    left: 90vw;
+    top: 10px;
+}
