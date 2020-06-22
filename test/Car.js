@@ -131,19 +131,19 @@ class Car{
         var nextPos = this.body.position.clone();
         let action = "Idle";
 
-        if(keyboard.pressed('right')){
+        if(keyboard.pressed('D')){
             this.rot -= 0.06;
             action = "Walking";
         }
-        if(keyboard.pressed('left')){
+        if(keyboard.pressed('A')){
             this.rot += 0.06;
             action = "Walking";
         }
-        if(keyboard.pressed('up')){
+        if(keyboard.pressed('W')){
             nextPos = this.body.position.clone().add(new THREE.Vector3(2,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), this.rot));
             action = "Running";
         }
-        if(keyboard.pressed('down')){
+        if(keyboard.pressed('S')){
             nextPos = this.body.position.clone().add(new THREE.Vector3(-2,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), this.rot));
             action = "Running";
         }

@@ -39,7 +39,7 @@ $("#StartGame").click(function(e){
 
 $('#info').click(function(e){
     clock.stop();
-    alert("使用方向鍵上下左右可以控制機器人\n使用\"M\"可以打開大地圖\n可以藉由滑鼠點擊牆壁一次來移除牆，但只有兩次喔\n\n小心別被NPC抓到，會暫時倒地一陣子\n\n找到出口旗幟並走到吧，加油！！！");
+    alert("使用方向鍵WASD可以控制機器人\n使用\"M\"可以打開大地圖\n可以藉由滑鼠點擊牆壁一次來移除牆，但只有兩次喔\n\n小心別被NPC抓到，不然會暫時倒地一陣子\n\n找到出口旗幟並走到吧，加油！！！");
     clock.start();
 });
 
@@ -194,7 +194,7 @@ function init() {
         },undefined,function(xhr) {console.log('error loader texture');}
     );
 
-    let nextPos = Math.floor((Math.random() * mazeSize * mazeSize));
+    let nextPos = Math.floor(Math.floor(Math.random() * mazeSize) * mazeSize);
     npcEx = new NPC(maze,robotModel,'',3,0,nextPos,camera);
     npcEx.speed = 120;
 
@@ -271,6 +271,8 @@ function initGame(){
     document.getElementById("InitGame").style.display = "none";
     document.getElementById("InGame").style.display = "inline";
     systemTime = 0;
+    isremoveWall = 2;
+
 
     camera.far = 550;
     camera.updateProjectionMatrix();
