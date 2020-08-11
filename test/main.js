@@ -144,6 +144,7 @@ function onunloadEvent(){
     console.log('x');
 }
 
+// 最初畫面
 function init() {
     initScene();
     scene.background = new THREE.Color( 0x222222 );
@@ -194,8 +195,9 @@ function init() {
         },undefined,function(xhr) {console.log('error loader texture');}
     );
 
-    let nextPos = Math.floor(Math.floor(Math.random() * mazeSize) * mazeSize);
-    npcEx = new NPC(maze,robotModel,'',3,0,nextPos,camera);
+    //let nextPos = Math.floor(Math.floor(Math.random() * mazeSize) * mazeSize);
+    let nextPos = mazeSize * mazeSize - 1;
+    npcEx = new NPC(maze,robotModel,'',5,0,nextPos,camera);
     npcEx.speed = 120;
 
     let mat = loader.load('./texture/FinalLine.png');
@@ -216,6 +218,7 @@ function init() {
     scene.fog = new THREE.Fog( 0x222222, 550 - 50, 550 );
 }
 
+//介紹畫面
 function initStart(){
     document.getElementById("EndGame").style.display = "none";
     document.getElementById("InitGame").style.display = "inline";
@@ -267,6 +270,7 @@ function initStart(){
 
 }
 
+//開始遊戲後畫面
 function initGame(){
     document.getElementById("InitGame").style.display = "none";
     document.getElementById("InGame").style.display = "inline";
@@ -354,6 +358,7 @@ function creataSkybox(){
     scene.add(skyBox);
 }
 
+//初始畫面動畫
 function initAnimate(dt){
     npcEx.update(dt);
 
@@ -379,6 +384,7 @@ function initAnimate(dt){
     }
 }
 
+//遊戲畫面動畫
 function gameAnimate(dt){
     
     if(gameState === "Game")
@@ -422,6 +428,7 @@ function gameAnimate(dt){
 
 }
 
+//決定使用何者動畫
 function mainAnimate() {
     var dt = clock.getDelta();
 

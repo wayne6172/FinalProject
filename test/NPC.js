@@ -172,9 +172,16 @@ class NPC extends Car{
                     now = closeList[i].Parent;
                     
                 }
-                // console.log('spend ' + clock.getElapsedTime());
+                let time = clock.getElapsedTime();
+                console.log('spend ' + time);
                 // console.log(this.AstarPath.length);
-                // console.log('ASC: ' + x);
+                console.log('ASC: ' + x);
+                localStorage["Time"] = time + parseFloat(localStorage["Time"]);
+                localStorage["ASC"] = x + parseInt(localStorage["ASC"]);
+                localStorage["Sum"] = parseInt(localStorage["Sum"]) + 1;
+
+                if(parseInt(localStorage["Sum"]) < 100)
+                    location.reload();
 
                 return;
             }
