@@ -24,7 +24,7 @@
     "socket.io": "^2.2.0",
     "socket.io-client": "^2.2.0",
     "stats-js": "^1.0.0",
-    "three": "^0.110.0",
+    "three": "^0.125.0",
     "three-gltf-loader": "^1.110.0",
     "three-orbitcontrols": "^2.102.1",
     "twgl.js": "^4.14.0",
